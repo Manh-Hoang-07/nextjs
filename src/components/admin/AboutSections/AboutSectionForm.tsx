@@ -1,13 +1,29 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Modal from "@/components/ui/Modal";
 import FormField from "@/components/ui/FormField";
 import ImageUploader from "@/components/ui/ImageUploader";
 import CKEditor from "@/components/ui/CKEditor";
 import { userEndpoints } from "@/lib/api/endpoints";
 
-// Enum helpers
+// 1. Define AboutSection Schema
+const aboutSectionSchema = z.object({
+  title: z.string().min(1, "Tiêu đề là bắt buộc").max(255, "Tiêu đề tối đa 255 ký tự"),
+  slug: z.string().max(255).optional().nullable().or(z.literal("")),
+  content: z.string().min(1, "Nội dung là bắt buộc"),
+  image: z.string().optional().nullable().or(z.literal("")),
+  video_url: z.string().url("URL không hợp lệ").or(z.literal("")).optional().nullable(),
+  section_type: z.string().default("history"),
+  status: z.string().default("active"),
+  sort_order: z.coerce.number().default(0),
+});
+
+type AboutSectionFormValues = z.infer<typeof aboutSectionSchema>;
+
 const getAboutSectionTypeArray = () => [
   { value: "history", label: "Lịch sử" },
   { value: "mission", label: "Sứ mệnh" },
@@ -39,7 +55,7 @@ interface AboutSectionFormProps {
   show: boolean;
   section?: AboutSection | null;
   apiErrors?: Record<string, string | string[]>;
-  onSubmit?: (data: Partial<AboutSection>) => void;
+  onSubmit?: (data: any) => void;
   onCancel?: () => void;
 }
 
@@ -50,214 +66,231 @@ export default function AboutSectionForm({
   onSubmit,
   onCancel,
 }: AboutSectionFormProps) {
-  const formTitle = section ? "Chỉnh sửa section" : "Thêm section mới";
-
-  const [formData, setFormData] = useState<Partial<AboutSection>>({
-    title: "",
-    slug: "",
-    content: "",
-    image: null,
-    video_url: "",
-    section_type: "history",
-    status: "active",
-    sort_order: 0,
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<AboutSectionFormValues>({
+    resolver: zodResolver(aboutSectionSchema),
+    defaultValues: {
+      title: "",
+      slug: "",
+      content: "",
+      image: "",
+      video_url: "",
+      section_type: "history",
+      status: "active",
+      sort_order: 0,
+    },
   });
-
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sectionTypeOptions = useMemo(() => getAboutSectionTypeArray(), []);
   const statusOptions = useMemo(() => getBasicStatusArray(), []);
-  const imageUrl = useMemo(() => section?.image || null, [section]);
 
+  // Reset/Initialize
   useEffect(() => {
-    if (section) {
-      setFormData({
-        title: section.title || "",
-        slug: section.slug || "",
-        content: section.content || "",
-        image: section.image || null,
-        video_url: section.video_url || "",
-        section_type: section.section_type || "history",
-        status: section.status || "active",
-        sort_order: section.sort_order || 0,
+    if (show) {
+      if (section) {
+        reset({
+          title: section.title || "",
+          slug: section.slug || "",
+          content: section.content || "",
+          image: section.image || "",
+          video_url: section.video_url || "",
+          section_type: section.section_type || "history",
+          status: section.status || "active",
+          sort_order: section.sort_order || 0,
+        });
+      } else {
+        reset({
+          title: "",
+          slug: "",
+          content: "",
+          image: "",
+          video_url: "",
+          section_type: "history",
+          status: "active",
+          sort_order: 0,
+        });
+      }
+    }
+  }, [section, show, reset]);
+
+  // Map API Errors
+  useEffect(() => {
+    if (apiErrors) {
+      Object.keys(apiErrors).forEach((key) => {
+        const message = Array.isArray(apiErrors[key]) ? apiErrors[key][0] : String(apiErrors[key]);
+        setError(key as any, { message });
       });
-    } else {
-      setFormData({
-        title: "",
-        slug: "",
-        content: "",
-        image: null,
-        video_url: "",
-        section_type: "history",
-        status: "active",
-        sort_order: 0,
-      });
     }
-    setValidationErrors({});
-  }, [section, show]);
+  }, [apiErrors, setError]);
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
+  const formTitle = section ? "Chỉnh sửa Section Giới thiệu" : "Thêm Section Giới thiệu mới";
 
-    if (!formData.title?.trim()) {
-      errors.title = "Tiêu đề là bắt buộc";
-    }
-
-    if (!formData.content?.trim()) {
-      errors.content = "Nội dung là bắt buộc";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const submitData = {
-        title: formData.title?.trim(),
-        slug: formData.slug?.trim() || undefined,
-        content: formData.content?.trim(),
-        image: formData.image || null,
-        video_url: formData.video_url?.trim() || undefined,
-        section_type: formData.section_type,
-        status: formData.status,
-        sort_order: Number(formData.sort_order) || 0,
-      };
-      onSubmit?.(submitData);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getApiError = (field: string): string | undefined => {
-    const error = apiErrors[field];
-    if (Array.isArray(error)) {
-      return error[0];
-    }
-    return error;
-  };
+  if (!show) return null;
 
   return (
-    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl">
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="space-y-6">
-          <div className="border-b border-gray-200 pb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Thông tin section</h3>
-          </div>
+    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl" loading={isSubmitting}>
+      <form onSubmit={handleSubmit((data) => onSubmit?.(data))} className="space-y-8 p-1">
+
+        {/* SECTION: THÔNG TIN CHÍNH */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Thông tin Section</h3>
+              <p className="text-xs text-gray-500">Tiêu đề, loại nội dung và trạng thái hiển thị</p>
+            </div>
+          </header>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <FormField
                 label="Tiêu đề"
-                type="text"
-                value={formData.title}
-                placeholder="Nhập tiêu đề"
+                {...register("title")}
+                placeholder="Ví dụ: Tầm nhìn & Sứ mệnh của công ty"
+                error={errors.title?.message}
                 required
-                error={validationErrors.title || getApiError("title")}
-                onChange={(value) => setFormData({ ...formData, title: value as string })}
               />
             </div>
 
-            <div>
-              <FormField
-                label="Slug (tùy chọn)"
-                type="text"
-                value={formData.slug}
-                placeholder="Tùy chọn, hệ thống tự tạo nếu bỏ trống"
-                error={getApiError("slug")}
-                onChange={(value) => setFormData({ ...formData, slug: value as string })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Loại section"
-                type="select"
-                value={formData.section_type}
-                options={sectionTypeOptions}
-                onChange={(value) => setFormData({ ...formData, section_type: value as string })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Trạng thái"
-                type="select"
-                value={formData.status}
-                options={statusOptions}
-                onChange={(value) => setFormData({ ...formData, status: value as string })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Thứ tự"
-                type="number"
-                value={formData.sort_order}
-                onChange={(value) => setFormData({ ...formData, sort_order: Number(value) || 0 })}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Nội dung <span className="text-red-500">*</span>
-            </label>
-            <CKEditor
-              value={formData.content || ""}
-              placeholder="Nhập nội dung..."
-              height="400px"
-              uploadUrl={userEndpoints.uploads.image}
-              onChange={(value) => setFormData({ ...formData, content: value })}
-            />
-            {validationErrors.content && (
-              <p className="mt-1 text-sm text-red-600">{validationErrors.content}</p>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">Hình ảnh</label>
-            <ImageUploader
-              value={formData.image}
-              defaultUrl={imageUrl || undefined}
-              onChange={(value) => setFormData({ ...formData, image: value as string | null })}
-              onRemove={() => setFormData({ ...formData, image: null })}
-            />
-          </div>
-
-          <div>
             <FormField
-              label="Video URL"
-              type="text"
-              value={formData.video_url}
-              placeholder="https://..."
-              onChange={(value) => setFormData({ ...formData, video_url: value as string })}
+              label="Đường dẫn tĩnh (Slug)"
+              {...register("slug")}
+              placeholder="tam-nhin-su-menh (Tự sinh nếu trống)"
+              error={errors.slug?.message}
+            />
+
+            <Controller
+              name="section_type"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <FormField
+                  label="Loại Section"
+                  required
+                  type="select"
+                  value={value}
+                  options={sectionTypeOptions}
+                  onChange={onChange}
+                  error={errors.section_type?.message}
+                />
+              )}
+            />
+
+            <Controller
+              name="status"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <FormField
+                  label="Trạng thái"
+                  required
+                  type="select"
+                  value={value}
+                  options={statusOptions}
+                  onChange={onChange}
+                  error={errors.status?.message}
+                />
+              )}
+            />
+
+            <FormField
+              label="Thứ tự hiển thị"
+              type="number"
+              {...register("sort_order")}
+              error={errors.sort_order?.message}
+              helpText="Số càng nhỏ hiển thị càng trước"
             />
           </div>
-        </div>
+        </section>
 
-        <div className="flex justify-end space-x-3 pt-2">
+        {/* SECTION: NỘI DUNG CHI TIẾT */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Nội dung chi tiết</h3>
+              <p className="text-xs text-gray-500">Mô tả đầy đủ nội dung cho section này</p>
+            </div>
+          </header>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Nội dung <span className="text-red-500">*</span></label>
+              <Controller
+                name="content"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                  <CKEditor
+                    value={value}
+                    onChange={onChange}
+                    height="400px"
+                    uploadUrl={userEndpoints.uploads.image}
+                  />
+                )}
+              />
+              {errors.content && <p className="text-xs text-red-500 mt-1">{errors.content.message}</p>}
+            </div>
+
+            <FormField
+              label="Video URL (Tùy chọn)"
+              {...register("video_url")}
+              placeholder="https://youtube.com/watch?v=..."
+              error={errors.video_url?.message}
+              helpText="Hiển thị video embed nếu được hỗ trợ bởi giao diện"
+            />
+          </div>
+        </section>
+
+        {/* SECTION: HÌNH ẢNH */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Hình ảnh minh họa</h3>
+              <p className="text-xs text-gray-500">Ảnh đại diện hoặc minh họa cho section</p>
+            </div>
+          </header>
+
+          <Controller
+            name="image"
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <ImageUploader value={value} onChange={onChange} />
+            )}
+          />
+        </section>
+
+        {/* FOOTER ACTIONS */}
+        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="px-8 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95"
           >
-            Hủy
+            Hủy bỏ
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
-            {isSubmitting ? "Đang xử lý..." : section ? "Cập nhật" : "Thêm mới"}
+            {isSubmitting ? "Đang xử lý..." : section ? "Cập nhật Section" : "Thêm Section"}
           </button>
         </div>
       </form>

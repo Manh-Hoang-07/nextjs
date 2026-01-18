@@ -1,9 +1,23 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Modal from "@/components/ui/Modal";
 import FormField from "@/components/ui/FormField";
 import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
+
+// 1. Define Permission Schema
+const permissionSchema = z.object({
+  code: z.string().min(1, "Mã code là bắt buộc").max(120, "Mã code tối đa 120 ký tự"),
+  name: z.string().max(150, "Tên quyền tối đa 150 ký tự").optional().nullable(),
+  scope: z.string().default("context"),
+  parent_id: z.coerce.number().optional().nullable(),
+  status: z.string().default("active"),
+});
+
+type PermissionFormValues = z.infer<typeof permissionSchema>;
 
 const getBasicStatusArray = () => [
   { value: "active", label: "Hoạt động" },
@@ -24,7 +38,7 @@ interface PermissionFormProps {
   permission?: Permission | null;
   statusEnums?: Array<{ value: string; label?: string; name?: string }>;
   apiErrors?: Record<string, string | string[]>;
-  onSubmit?: (data: Partial<Permission>) => void;
+  onSubmit?: (data: any) => void;
   onCancel?: () => void;
 }
 
@@ -36,177 +50,160 @@ export default function PermissionForm({
   onSubmit,
   onCancel,
 }: PermissionFormProps) {
-  const formTitle = permission ? "Chỉnh sửa quyền" : "Thêm quyền mới";
-
-  const [formData, setFormData] = useState<Partial<Permission>>({
-    code: "",
-    name: "",
-    scope: "context",
-    parent_id: null,
-    status: "active",
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<PermissionFormValues>({
+    resolver: zodResolver(permissionSchema),
+    defaultValues: {
+      code: "",
+      name: "",
+      scope: "context",
+      parent_id: null,
+      status: "active",
+    },
   });
-
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const statusOptions = useMemo(() => {
     const statusArray = statusEnums && statusEnums.length > 0 ? statusEnums : getBasicStatusArray();
-    return [{ value: "", label: "-- Chọn trạng thái --" }, ...statusArray.map((opt) => ({
+    return statusArray.map((opt) => ({
       value: opt.value,
       label: opt.label || (opt as any).name || opt.value,
-    }))];
+    }));
   }, [statusEnums]);
 
   const scopeOptions = [
-    { value: "context", label: "Context (Dùng trong shop, group, ...)" },
-    { value: "system", label: "System (Chỉ dùng trong system context)" },
+    { value: "context", label: "Context (Dùng trong Shop, Group, ...)" },
+    { value: "system", label: "System (Chỉ dùng trong Hệ thống)" },
   ];
 
+  // Reset/Initialize
   useEffect(() => {
-    if (permission) {
-      setFormData({
-        code: permission.code || "",
-        name: permission.name || "",
-        scope: permission.scope || "context",
-        parent_id: permission.parent_id || null,
-        status: permission.status || "active",
+    if (show) {
+      if (permission) {
+        reset({
+          code: permission.code || "",
+          name: permission.name || "",
+          scope: permission.scope || "context",
+          parent_id: permission.parent_id || null,
+          status: permission.status || "active",
+        });
+      } else {
+        reset({
+          code: "",
+          name: "",
+          scope: "context",
+          parent_id: null,
+          status: "active",
+        });
+      }
+    }
+  }, [permission, show, reset]);
+
+  // Map API Errors
+  useEffect(() => {
+    if (apiErrors) {
+      Object.keys(apiErrors).forEach((key) => {
+        const message = Array.isArray(apiErrors[key]) ? apiErrors[key][0] : String(apiErrors[key]);
+        setError(key as any, { message });
       });
-    } else {
-      setFormData({
-        code: "",
-        name: "",
-        scope: "context",
-        parent_id: null,
-        status: "active",
-      });
     }
-    setValidationErrors({});
-  }, [permission, show]);
+  }, [apiErrors, setError]);
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
+  const formTitle = permission ? "Chỉnh sửa Quyền" : "Thêm Quyền mới";
 
-    if (!formData.code?.trim()) {
-      errors.code = "Mã code là bắt buộc";
-    } else if (formData.code.length > 120) {
-      errors.code = "Mã code không được vượt quá 120 ký tự";
-    }
-
-    if (formData.name && formData.name.length > 150) {
-      errors.name = "Tên quyền không được vượt quá 150 ký tự";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const submitData = {
-        code: formData.code?.trim(),
-        name: formData.name?.trim() || undefined,
-        scope: formData.scope || "context",
-        parent_id: formData.parent_id || null,
-        status: formData.status || "active",
-      };
-      onSubmit?.(submitData);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getApiError = (field: string): string | undefined => {
-    if (!apiErrors) return undefined;
-    const error = apiErrors[field];
-    if (Array.isArray(error)) {
-      return error[0];
-    }
-    return error;
-  };
+  if (!show) return null;
 
   return (
-    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="border-b border-gray-200 pb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Thông tin quyền</h3>
-          <p className="text-sm text-gray-600 mt-1">Nhập thông tin cơ bản cho quyền</p>
-        </div>
+    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl" loading={isSubmitting}>
+      <form onSubmit={handleSubmit((data) => onSubmit?.(data))} className="space-y-8 p-1">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+        {/* SECTION: THÔNG TIN QUYỀN */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Thông tin Quyền</h3>
+              <p className="text-xs text-gray-500">Mã định danh hệ thống và phạm vi áp dụng</p>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
-              label="Mã code"
-              type="text"
-              value={formData.code}
-              placeholder="Ví dụ: post.manage, user.create"
+              label="Mã định danh (Code)"
+              {...register("code")}
+              placeholder="Ví dụ: post.create, user.manage"
+              error={errors.code?.message}
               required
               disabled={!!permission}
-              error={validationErrors.code || getApiError("code")}
-              onChange={(value) => setFormData({ ...formData, code: value as string })}
+              helpText={permission ? "Code không thể thay đổi sau khi tạo" : "Dùng để kiểm tra quyền trong code (ví dụ: hasPermission('user.manage'))"}
             />
-            {permission && <p className="text-xs text-gray-500 mt-1">Không thể thay đổi mã code sau khi tạo</p>}
-          </div>
-
-          <div>
             <FormField
-              label="Tên quyền"
-              type="text"
-              value={formData.name}
+              label="Tên Quyền"
+              {...register("name")}
               placeholder="Ví dụ: Quản lý bài viết"
-              error={validationErrors.name || getApiError("name")}
-              onChange={(value) => setFormData({ ...formData, name: value as string })}
+              error={errors.name?.message}
+            />
+
+            <Controller
+              name="scope"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <div className="space-y-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Phạm vi (Scope) <span className="text-red-500">*</span></label>
+                  <SingleSelectEnhanced
+                    value={value}
+                    options={scopeOptions}
+                    onChange={onChange}
+                    placeholder="Chọn phạm vi..."
+                  />
+                  {errors.scope && <p className="text-xs text-red-500">{errors.scope.message}</p>}
+                </div>
+              )}
+            />
+
+            <Controller
+              name="status"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <div className="space-y-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Trạng thái <span className="text-red-500">*</span></label>
+                  <SingleSelectEnhanced
+                    value={value}
+                    options={statusOptions}
+                    onChange={onChange}
+                    placeholder="Chọn trạng thái..."
+                  />
+                  {errors.status && <p className="text-xs text-red-500">{errors.status.message}</p>}
+                </div>
+              )}
             />
           </div>
+        </section>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phạm vi (Scope)</label>
-            <select
-              value={formData.scope}
-              onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              {scopeOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Chọn phạm vi áp dụng của quyền này</p>
-          </div>
-
-          <div>
-            <FormField
-              label="Trạng thái"
-              type="select"
-              value={formData.status}
-              options={statusOptions}
-              error={validationErrors.status || getApiError("status")}
-              onChange={(value) => setFormData({ ...formData, status: value as string })}
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+        {/* FOOTER ACTIONS */}
+        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="px-8 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95"
           >
-            Hủy
+            Hủy bỏ
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
-            {isSubmitting ? "Đang xử lý..." : permission ? "Cập nhật quyền" : "Thêm quyền mới"}
+            {isSubmitting ? "Đang xử lý..." : permission ? "Cập nhật Quyền" : "Thêm Quyền mới"}
           </button>
         </div>
       </form>

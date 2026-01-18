@@ -104,7 +104,10 @@ export default function SystemConfigForm({ group, fields }: SystemConfigFormProp
                                 value={field.type === "checkbox" ? !!formData[field.key] : formData[field.key] ?? ""}
                                 placeholder={field.placeholder}
                                 helpText={field.description}
-                                onChange={(value) => handleChange(field.key, value)}
+                                onChange={(e) => {
+                                    const value = field.type === "checkbox" ? e.target.checked : e.target.value;
+                                    handleChange(field.key, value);
+                                }}
                             />
                         )}
                     </div>

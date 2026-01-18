@@ -1,11 +1,39 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Modal from "@/components/ui/Modal";
 import FormField from "@/components/ui/FormField";
 import ImageUploader from "@/components/ui/ImageUploader";
 import CKEditor from "@/components/ui/CKEditor";
 import { userEndpoints } from "@/lib/api/endpoints";
+
+// 1. Define Project Schema
+const projectSchema = z.object({
+  name: z.string().min(1, "Tên dự án là bắt buộc").max(255, "Tên dự án không được vượt quá 255 ký tự"),
+  slug: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  short_description: z.string().optional().nullable(),
+  cover_image: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  area: z.coerce.number().optional().nullable(),
+  start_date: z.string().optional().nullable(),
+  end_date: z.string().optional().nullable(),
+  status: z.string().default("planning"),
+  client_name: z.string().optional().nullable(),
+  budget: z.coerce.number().optional().nullable(),
+  images: z.array(z.string()).min(1, "Hình ảnh dự án là bắt buộc"),
+  featured: z.boolean().default(false),
+  sort_order: z.coerce.number().default(0),
+  meta_title: z.string().max(255).optional().nullable(),
+  meta_description: z.string().optional().nullable(),
+  canonical_url: z.string().url("URL không hợp lệ").or(z.literal("")).optional().nullable(),
+  og_image: z.string().optional().nullable(),
+});
+
+type ProjectFormValues = z.infer<typeof projectSchema>;
 
 const getProjectStatusArray = () => [
   { value: "planning", label: "Đang lập kế hoạch" },
@@ -43,7 +71,7 @@ interface ProjectFormProps {
   project?: Project | null;
   statusEnums?: Array<{ value: string; label?: string; name?: string }>;
   apiErrors?: Record<string, string | string[]>;
-  onSubmit?: (data: Partial<Project>) => void;
+  onSubmit?: (data: any) => void;
   onCancel?: () => void;
 }
 
@@ -55,423 +83,363 @@ export default function ProjectForm({
   onSubmit,
   onCancel,
 }: ProjectFormProps) {
-  const formTitle = project ? "Chỉnh sửa dự án" : "Thêm dự án mới";
-
-  const [formData, setFormData] = useState<Partial<Project>>({
-    name: "",
-    slug: "",
-    description: "",
-    short_description: "",
-    cover_image: null,
-    location: "",
-    area: null,
-    start_date: "",
-    end_date: "",
-    status: "planning",
-    client_name: "",
-    budget: null,
-    images: [],
-    featured: false,
-    sort_order: 0,
-    meta_title: "",
-    meta_description: "",
-    canonical_url: "",
-    og_image: null,
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      name: "",
+      slug: "",
+      description: "",
+      short_description: "",
+      cover_image: "",
+      location: "",
+      area: null,
+      start_date: "",
+      end_date: "",
+      status: "planning",
+      client_name: "",
+      budget: null,
+      images: [],
+      featured: false,
+      sort_order: 0,
+      meta_title: "",
+      meta_description: "",
+      canonical_url: "",
+      og_image: "",
+    },
   });
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const statusOptions = useMemo(() => {
-    const statusArray = statusEnums && statusEnums.length > 0 ? statusEnums : getProjectStatusArray();
+    const statusArray = statusEnums.length > 0 ? statusEnums : getProjectStatusArray();
     return statusArray.map((opt) => ({
       value: opt.value,
       label: opt.label || (opt as any).name || String(opt.value),
     }));
   }, [statusEnums]);
 
-  const coverImageUrl = useMemo(() => project?.cover_image || null, [project]);
-  const ogImageUrl = useMemo(() => project?.og_image || null, [project]);
-
+  // Reset/Initialize
   useEffect(() => {
-    if (project) {
-      setFormData({
-        name: project.name || "",
-        slug: project.slug || "",
-        description: project.description || "",
-        short_description: project.short_description || "",
-        cover_image: project.cover_image || null,
-        location: project.location || "",
-        area: project.area || null,
-        start_date: formatDateForInput(project.start_date),
-        end_date: formatDateForInput(project.end_date),
-        status: project.status || "planning",
-        client_name: project.client_name || "",
-        budget: project.budget || null,
-        images: Array.isArray(project.images) ? project.images : [],
-        featured: project.featured || false,
-        sort_order: project.sort_order || 0,
-        meta_title: project.meta_title || "",
-        meta_description: project.meta_description || "",
-        canonical_url: project.canonical_url || "",
-        og_image: project.og_image || null,
+    if (show) {
+      if (project) {
+        reset({
+          name: project.name || "",
+          slug: project.slug || "",
+          description: project.description || "",
+          short_description: project.short_description || "",
+          cover_image: project.cover_image || "",
+          location: project.location || "",
+          area: project.area || null,
+          start_date: project.start_date?.split("T")[0] || "",
+          end_date: project.end_date?.split("T")[0] || "",
+          status: project.status || "planning",
+          client_name: project.client_name || "",
+          budget: project.budget || null,
+          images: Array.isArray(project.images) ? project.images : [],
+          featured: !!project.featured,
+          sort_order: project.sort_order || 0,
+          meta_title: project.meta_title || "",
+          meta_description: project.meta_description || "",
+          canonical_url: project.canonical_url || "",
+          og_image: project.og_image || "",
+        });
+      } else {
+        reset({
+          name: "",
+          slug: "",
+          description: "",
+          short_description: "",
+          cover_image: "",
+          location: "",
+          area: null,
+          start_date: "",
+          end_date: "",
+          status: "planning",
+          client_name: "",
+          budget: null,
+          images: [],
+          featured: false,
+          sort_order: 0,
+          meta_title: "",
+          meta_description: "",
+          canonical_url: "",
+          og_image: "",
+        });
+      }
+    }
+  }, [project, show, reset]);
+
+  // Map API Errors
+  useEffect(() => {
+    if (apiErrors) {
+      Object.keys(apiErrors).forEach((key) => {
+        const message = Array.isArray(apiErrors[key]) ? apiErrors[key][0] : String(apiErrors[key]);
+        setError(key as any, { message });
       });
-    } else {
-      setFormData({
-        name: "",
-        slug: "",
-        description: "",
-        short_description: "",
-        cover_image: null,
-        location: "",
-        area: null,
-        start_date: "",
-        end_date: "",
-        status: "planning",
-        client_name: "",
-        budget: null,
-        images: [],
-        featured: false,
-        sort_order: 0,
-        meta_title: "",
-        meta_description: "",
-        canonical_url: "",
-        og_image: null,
-      });
     }
-    setValidationErrors({});
-  }, [project, show]);
+  }, [apiErrors, setError]);
 
-  const formatDateForInput = (dateString?: string): string => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  const formTitle = project ? "Chỉnh sửa dự án" : "Thêm dự án mới";
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.name?.trim()) {
-      errors.name = "Tên dự án là bắt buộc";
-    }
-
-    if (formData.name && formData.name.length > 255) {
-      errors.name = "Tên dự án không được vượt quá 255 ký tự";
-    }
-
-    if (!formData.images || formData.images.length === 0) {
-      errors.images = "Hình ảnh dự án là bắt buộc";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const submitData = {
-        name: formData.name?.trim(),
-        slug: formData.slug?.trim() || undefined,
-        description: formData.description?.trim() || undefined,
-        short_description: formData.short_description?.trim() || undefined,
-        cover_image: formData.cover_image || null,
-        location: formData.location?.trim() || undefined,
-        area: formData.area ? Number(formData.area) : null,
-        start_date: formData.start_date || undefined,
-        end_date: formData.end_date || undefined,
-        status: formData.status || "planning",
-        client_name: formData.client_name?.trim() || undefined,
-        budget: formData.budget ? Number(formData.budget) : null,
-        images: Array.isArray(formData.images) ? formData.images : [],
-        featured: Boolean(formData.featured),
-        sort_order: formData.sort_order ? Number(formData.sort_order) : 0,
-        meta_title: formData.meta_title?.trim() || undefined,
-        meta_description: formData.meta_description?.trim() || undefined,
-        canonical_url: formData.canonical_url?.trim() || undefined,
-        og_image: formData.og_image || null,
-      };
-      onSubmit?.(submitData);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getApiError = (field: string): string | undefined => {
-    const error = apiErrors[field];
-    if (Array.isArray(error)) {
-      return error[0];
-    }
-    return error;
-  };
+  if (!show) return null;
 
   return (
-    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl">
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="space-y-6">
-          <div className="border-b border-gray-200 pb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Thông tin dự án</h3>
-            <p className="text-sm text-gray-600 mt-1">Điền thông tin cơ bản về dự án</p>
-          </div>
+    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl" loading={isSubmitting}>
+      <form onSubmit={handleSubmit((data) => onSubmit?.(data))} className="space-y-8 p-1">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* SECTION: THÔNG TIN DỰ ÁN */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Thông tin dự án</h3>
+              <p className="text-xs text-gray-500">Mô tả và các thông số cơ bản</p>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <FormField
                 label="Tên dự án"
-                type="text"
-                value={formData.name}
-                placeholder="Nhập tên dự án"
+                {...register("name")}
+                error={errors.name?.message}
+                placeholder="Nhập tên dự án..."
                 required
-                error={validationErrors.name || getApiError("name")}
-                onChange={(value) => setFormData({ ...formData, name: value as string })}
               />
             </div>
-
-            <div>
-              <FormField
-                label="Slug"
-                type="text"
-                value={formData.slug}
-                placeholder="Tự động tạo từ tên nếu để trống"
-                onChange={(value) => setFormData({ ...formData, slug: value as string })}
-              />
-              <p className="text-xs text-gray-500 mt-1">Để trống để tự động tạo từ tên</p>
-            </div>
-
-            <div>
-              <FormField
-                label="Trạng thái"
-                type="select"
-                value={formData.status}
-                options={statusOptions}
-                onChange={(value) => setFormData({ ...formData, status: value as string })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Địa điểm"
-                type="text"
-                value={formData.location}
-                placeholder="Ví dụ: Hà Nội"
-                onChange={(value) => setFormData({ ...formData, location: value as string })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Diện tích (m²)"
-                type="number"
-                value={formData.area ?? undefined}
-                placeholder="0.00"
-                step="0.01"
-                onChange={(value) => setFormData({ ...formData, area: Number(value) || null })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Tên khách hàng"
-                type="text"
-                value={formData.client_name}
-                placeholder="Tên khách hàng"
-                onChange={(value) => setFormData({ ...formData, client_name: value as string })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Ngân sách (VNĐ)"
-                type="number"
-                value={formData.budget ?? undefined}
-                placeholder="0"
-                onChange={(value) => setFormData({ ...formData, budget: Number(value) || null })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Ngày bắt đầu"
-                type="date"
-                value={formData.start_date}
-                onChange={(value) => setFormData({ ...formData, start_date: value as string })}
-              />
-            </div>
-
-            <div>
-              <FormField
-                label="Ngày kết thúc"
-                type="date"
-                value={formData.end_date}
-                onChange={(value) => setFormData({ ...formData, end_date: value as string })}
-              />
-            </div>
-          </div>
-
-          <div>
             <FormField
-              label="Mô tả ngắn"
-              type="textarea"
-              value={formData.short_description}
-              placeholder="Mô tả ngắn về dự án..."
-              rows={3}
-              onChange={(value) => setFormData({ ...formData, short_description: value as string })}
+              label="Slug"
+              {...register("slug")}
+              error={errors.slug?.message}
+              placeholder="Để trống để tự động tạo..."
             />
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
-            <CKEditor
-              value={formData.description || ""}
-              onChange={(value) => setFormData({ ...formData, description: value as string })}
-              height="300px"
-              placeholder="Nhập mô tả chi tiết về dự án..."
-              uploadUrl={userEndpoints.uploads.image}
-            />
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">Ảnh bìa</label>
-            <ImageUploader
-              value={formData.cover_image}
-              defaultUrl={coverImageUrl || undefined}
-              onChange={(value) => setFormData({ ...formData, cover_image: value as string | null })}
-              onRemove={() => setFormData({ ...formData, cover_image: null })}
-            />
-            <p className="text-xs text-gray-500 mt-2">
-              Định dạng: jpg, png, webp. Kích thước khuyến nghị 1200x630.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Hình ảnh dự án <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []);
-                setFormData({ ...formData, images: files.map((f) => URL.createObjectURL(f)) });
-              }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm"
-            />
-            {validationErrors.images && (
-              <p className="mt-1 text-sm text-red-600">{validationErrors.images}</p>
-            )}
-            {getApiError("images") && (
-              <p className="mt-1 text-sm text-red-600">{getApiError("images")}</p>
-            )}
-            <p className="text-xs text-gray-500 mt-1">Có thể chọn nhiều ảnh cùng lúc</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="featured"
-                  checked={formData.featured || false}
-                  onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              name="status"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <FormField
+                  label="Trạng thái"
+                  required
+                  type="select"
+                  value={value}
+                  onChange={onChange}
+                  options={statusOptions}
+                  error={errors.status?.message}
                 />
-                <label htmlFor="featured" className="ml-2 text-sm font-medium text-gray-700">
-                  Dự án nổi bật
-                </label>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Hiển thị ưu tiên trên trang chủ</p>
-            </div>
+              )}
+            />
+            <FormField
+              label="Địa điểm"
+              {...register("location")}
+              error={errors.location?.message}
+              placeholder="Ví dụ: Quận 1, TP. HCM"
+            />
+            <FormField
+              label="Diện tích (m²)"
+              type="number"
+              {...register("area")}
+              error={errors.area?.message}
+              placeholder="0.00"
+            />
+            <FormField
+              label="Khách hàng"
+              {...register("client_name")}
+              error={errors.client_name?.message}
+              placeholder="Tên khách hàng/đối tác"
+            />
+            <FormField
+              label="Ngân sách"
+              type="number"
+              {...register("budget")}
+              error={errors.budget?.message}
+              placeholder="VNĐ"
+            />
+            <FormField
+              label="Ngày bắt đầu"
+              type="date"
+              {...register("start_date")}
+              error={errors.start_date?.message}
+            />
+            <FormField
+              label="Ngày kết thúc"
+              type="date"
+              {...register("end_date")}
+              error={errors.end_date?.message}
+            />
+          </div>
 
+          <FormField
+            label="Mô tả ngắn"
+            type="textarea"
+            rows={2}
+            {...register("short_description")}
+            error={errors.short_description?.message}
+            placeholder="Tóm tắt dự án trong 1-2 câu..."
+          />
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">Mô tả chi tiết</label>
+            <Controller
+              name="description"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <CKEditor
+                  value={value || ""}
+                  onChange={onChange}
+                  height="300px"
+                  placeholder="Nhập nội dung chi tiết..."
+                  uploadUrl={userEndpoints.uploads.image}
+                />
+              )}
+            />
+            {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description.message}</p>}
+          </div>
+        </section>
+
+        {/* SECTION: HÌNH ẢNH DỰ ÁN */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-pink-100 rounded-lg text-pink-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
             <div>
-              <FormField
-                label="Thứ tự sắp xếp"
-                type="number"
-                value={formData.sort_order}
-                placeholder="0"
-                onChange={(value) => setFormData({ ...formData, sort_order: Number(value) || 0 })}
-              />
+              <h3 className="text-lg font-bold text-gray-900">Hình ảnh & media</h3>
+              <p className="text-xs text-gray-500">Ảnh bìa và bộ sưu tập ảnh dự án</p>
             </div>
-          </div>
-        </div>
-
-        <div className="space-y-6 mt-8">
-          <div className="border-b border-gray-200 pb-4">
-            <h3 className="text-lg font-semibold text-gray-900">SEO</h3>
-            <p className="text-sm text-gray-600 mt-1">Tối ưu hiển thị trên công cụ tìm kiếm</p>
-          </div>
+          </header>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <FormField
-                label="Meta Title"
-                type="text"
-                value={formData.meta_title}
-                placeholder="Tiêu đề SEO"
-                onChange={(value) => setFormData({ ...formData, meta_title: value as string })}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Ảnh bìa (Cover)</label>
+              <Controller
+                name="cover_image"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                  <ImageUploader value={value} onChange={onChange} />
+                )}
               />
             </div>
-
-            <div>
-              <FormField
-                label="Canonical URL"
-                type="url"
-                value={formData.canonical_url}
-                placeholder="https://example.com/page"
-                onChange={(value) => setFormData({ ...formData, canonical_url: value as string })}
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Thứ tự & Hiển thị</label>
+              <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="featured"
+                    {...register("featured")}
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="featured" className="text-sm font-medium text-gray-700">Dự án nổi bật</label>
+                </div>
+                <FormField
+                  label="Thứ tự sắp xếp"
+                  type="number"
+                  {...register("sort_order")}
+                />
+              </div>
             </div>
           </div>
 
-          <div>
-            <FormField
-              label="Meta Description"
-              type="textarea"
-              value={formData.meta_description}
-              placeholder="Mô tả SEO"
-              rows={3}
-              onChange={(value) => setFormData({ ...formData, meta_description: value as string })}
-            />
-          </div>
+          <div className="space-y-4">
+            <label className="text-sm font-semibold text-gray-700">Bộ sưu tập ảnh dự án (Showcase) <span className="text-red-500">*</span></label>
+            <div className="p-4 border-2 border-dashed border-gray-300 rounded-xl bg-white hover:border-blue-400 transition-colors">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  const currentImages = control._formValues.images || [];
+                  const newImages = [...currentImages, ...files.map(f => URL.createObjectURL(f))];
+                  control._fields.images?._f.value = newImages;
+                  setValue("images", newImages, { shouldValidate: true });
+                }}
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <p className="mt-2 text-xs text-gray-400">Có thể chọn nhiều ảnh. Ảnh đầu tiên nên là ảnh chính.</p>
+            </div>
+            {errors.images && <p className="text-xs text-red-500">{errors.images.message}</p>}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">OG Image</label>
-            <ImageUploader
-              value={formData.og_image}
-              defaultUrl={ogImageUrl || undefined}
-              onChange={(value) => setFormData({ ...formData, og_image: value as string | null })}
-              onRemove={() => setFormData({ ...formData, og_image: null })}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Hình ảnh hiển thị khi chia sẻ (khuyến nghị 1200x630px)
-            </p>
+            {/* Simple Image Gallery Preview */}
+            <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mt-4">
+              {control._formValues.images?.map((img: string, idx: number) => (
+                <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                  <img src={img} alt="preview" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newImgs = control._formValues.images.filter((_: any, i: number) => i !== idx);
+                      setValue("images", newImgs);
+                    }}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div className="flex justify-end space-x-3 pt-2">
+        {/* SECTION: TỐI ƯU SEO */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-green-100 rounded-lg text-green-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Tối ưu SEO</h3>
+              <p className="text-xs text-gray-500">Cấu hình cho công cụ tìm kiếm và mạng xã hội</p>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label="Meta Title" {...register("meta_title")} error={errors.meta_title?.message} />
+            <FormField label="Canonical URL" {...register("canonical_url")} error={errors.canonical_url?.message} />
+            <div className="md:col-span-2">
+              <FormField label="Meta Description" type="textarea" rows={3} {...register("meta_description")} error={errors.meta_description?.message} />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-sm font-semibold text-gray-700">OpenGraph Image</label>
+              <Controller
+                name="og_image"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                  <ImageUploader value={value} onChange={onChange} />
+                )}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* FOOTER ACTIONS */}
+        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+            className="px-8 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95"
           >
-            Hủy
+            Hủy bỏ
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none disabled:opacity-50"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
-            {isSubmitting ? "Đang xử lý..." : project ? "Cập nhật" : "Thêm mới"}
+            {isSubmitting ? "Đang xử lý..." : project ? "Cập nhật dự án" : "Thêm dự án mới"}
           </button>
         </div>
       </form>

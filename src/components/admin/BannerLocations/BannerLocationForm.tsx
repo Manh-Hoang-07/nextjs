@@ -1,9 +1,25 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Modal from "@/components/ui/Modal";
 import FormField from "@/components/ui/FormField";
 import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
+
+// 1. Define BannerLocation Schema
+const bannerLocationSchema = z.object({
+  code: z.string()
+    .min(1, "Mã vị trí là bắt buộc")
+    .regex(/^[a-z_]+$/, "Mã vị trí chỉ chứa chữ thường và dấu gạch dưới")
+    .max(100, "Mã tối đa 100 ký tự"),
+  name: z.string().min(1, "Tên vị trí là bắt buộc").max(255, "Tên tối đa 255 ký tự"),
+  description: z.string().max(500).optional().nullable(),
+  status: z.string().default("active"),
+});
+
+type BannerLocationFormValues = z.infer<typeof bannerLocationSchema>;
 
 const getBasicStatusArray = () => [
   { value: "active", label: "Hoạt động" },
@@ -23,7 +39,7 @@ interface BannerLocationFormProps {
   location?: BannerLocation | null;
   statusEnums?: Array<{ value: string; label?: string; name?: string }>;
   apiErrors?: Record<string, string | string[]>;
-  onSubmit?: (data: Partial<BannerLocation>) => void;
+  onSubmit?: (data: any) => void;
   onCancel?: () => void;
 }
 
@@ -35,17 +51,22 @@ export default function BannerLocationForm({
   onSubmit,
   onCancel,
 }: BannerLocationFormProps) {
-  const formTitle = location ? "Chỉnh sửa vị trí banner" : "Thêm vị trí banner mới";
-
-  const [formData, setFormData] = useState<Partial<BannerLocation>>({
-    code: "",
-    name: "",
-    description: "",
-    status: "active",
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<BannerLocationFormValues>({
+    resolver: zodResolver(bannerLocationSchema),
+    defaultValues: {
+      code: "",
+      name: "",
+      description: "",
+      status: "active",
+    },
   });
-
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const statusOptions = useMemo(() => {
     const statusArray = statusEnums && statusEnums.length > 0 ? statusEnums : getBasicStatusArray();
@@ -55,145 +76,123 @@ export default function BannerLocationForm({
     }));
   }, [statusEnums]);
 
+  // Reset/Initialize
   useEffect(() => {
-    if (location) {
-      setFormData({
-        code: location.code || "",
-        name: location.name || "",
-        description: location.description || "",
-        status: location.status || "active",
+    if (show) {
+      if (location) {
+        reset({
+          code: location.code || "",
+          name: location.name || "",
+          description: location.description || "",
+          status: location.status || "active",
+        });
+      } else {
+        reset({
+          code: "",
+          name: "",
+          description: "",
+          status: "active",
+        });
+      }
+    }
+  }, [location, show, reset]);
+
+  // Map API Errors
+  useEffect(() => {
+    if (apiErrors) {
+      Object.keys(apiErrors).forEach((key) => {
+        const message = Array.isArray(apiErrors[key]) ? apiErrors[key][0] : String(apiErrors[key]);
+        setError(key as any, { message });
       });
-    } else {
-      setFormData({
-        code: "",
-        name: "",
-        description: "",
-        status: "active",
-      });
     }
-    setValidationErrors({});
-  }, [location, show]);
+  }, [apiErrors, setError]);
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
+  const formTitle = location ? "Chỉnh sửa Vị trí Banner" : "Thêm Vị trí Banner mới";
 
-    if (!formData.code?.trim()) {
-      errors.code = "Mã vị trí là bắt buộc";
-    } else if (!/^[a-z_]+$/.test(formData.code)) {
-      errors.code = "Mã vị trí chỉ chứa chữ thường và dấu gạch dưới";
-    }
-
-    if (!formData.name?.trim()) {
-      errors.name = "Tên vị trí là bắt buộc";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const submitData = {
-        code: formData.code?.trim(),
-        name: formData.name?.trim(),
-        description: formData.description?.trim() || undefined,
-        status: formData.status || "active",
-      };
-      onSubmit?.(submitData);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getApiError = (field: string): string | undefined => {
-    const error = apiErrors[field];
-    if (Array.isArray(error)) {
-      return error[0];
-    }
-    return error;
-  };
+  if (!show) return null;
 
   return (
-    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="lg">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="border-b border-gray-200 pb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Thông tin cơ bản</h3>
-          <p className="text-sm text-gray-600 mt-1">Nhập thông tin cơ bản của vị trí banner</p>
-        </div>
+    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl" loading={isSubmitting}>
+      <form onSubmit={handleSubmit((data) => onSubmit?.(data))} className="space-y-8 p-1">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+        {/* SECTION: THÔNG TIN VỊ TRÍ */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Thông tin Vị trí</h3>
+              <p className="text-xs text-gray-500">Mã định danh và tên gợi nhớ cho vùng hiển thị banner</p>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
-              label="Mã vị trí"
-              type="text"
-              value={formData.code}
-              placeholder="home_slider"
+              label="Mã vị trí (Code)"
+              {...register("code")}
+              placeholder="home_slider, sidebar_adv..."
+              error={errors.code?.message}
               required
               disabled={!!location}
-              error={validationErrors.code || getApiError("code")}
-              onChange={(value) => setFormData({ ...formData, code: value as string })}
+              helpText={location ? "Mã vị trí không thể thay đổi sau khi tạo" : "Dùng để lấy banners cho vị trí này trong code"}
             />
-            {location && <p className="text-xs text-gray-500 mt-1">Mã vị trí không thể thay đổi sau khi tạo</p>}
-          </div>
-
-          <div>
             <FormField
               label="Tên vị trí"
-              type="text"
-              value={formData.name}
-              placeholder="Slider trang chủ"
+              {...register("name")}
+              placeholder="Ví dụ: Slider Trang chủ"
+              error={errors.name?.message}
               required
-              error={validationErrors.name || getApiError("name")}
-              onChange={(value) => setFormData({ ...formData, name: value as string })}
+            />
+
+            <div className="md:col-span-2">
+              <FormField
+                label="Mô tả"
+                type="textarea"
+                rows={3}
+                {...register("description")}
+                placeholder="Nhập mô tả về cách sử dụng vị trí banner này..."
+                error={errors.description?.message}
+              />
+            </div>
+
+            <Controller
+              name="status"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <div className="space-y-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Trạng thái <span className="text-red-500">*</span></label>
+                  <SingleSelectEnhanced
+                    value={value}
+                    options={statusOptions}
+                    onChange={onChange}
+                    placeholder="Chọn trạng thái..."
+                  />
+                  {errors.status && <p className="text-xs text-red-500">{errors.status.message}</p>}
+                </div>
+              )}
             />
           </div>
-        </div>
+        </section>
 
-        <div>
-          <FormField
-            label="Mô tả"
-            type="textarea"
-            value={formData.description}
-            placeholder="Mô tả chi tiết về vị trí banner này..."
-            rows={3}
-            onChange={(value) => setFormData({ ...formData, description: value as string })}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
-          <SingleSelectEnhanced
-            value={formData.status}
-            options={statusOptions}
-            labelField="label"
-            valueField="value"
-            placeholder="-- Chọn trạng thái --"
-            error={validationErrors.status || getApiError("status")}
-            onChange={(value) => setFormData({ ...formData, status: value as string })}
-          />
-        </div>
-
-        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+        {/* FOOTER ACTIONS */}
+        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg shadow transition-all duration-200"
+            className="px-8 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95"
           >
-            Hủy
+            Hủy bỏ
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
-            {isSubmitting ? "Đang xử lý..." : location ? "Cập nhật vị trí" : "Thêm vị trí mới"}
+            {isSubmitting ? "Đang xử lý..." : location ? "Cập nhật Vị trí" : "Thêm Vị trí"}
           </button>
         </div>
       </form>

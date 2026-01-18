@@ -104,13 +104,13 @@ export default function ContactChannelsManager({ value = [], onChange }: Contact
                                 <FormField
                                     label="Loại (Type)"
                                     value={channel.type}
-                                    onChange={(val) => handleUpdate(index, { type: val })}
+                                    onChange={(e) => handleUpdate(index, { type: e.target.value })}
                                     placeholder="hotline, zalo..."
                                 />
                                 <FormField
                                     label="Nhãn (Label)"
                                     value={channel.label}
-                                    onChange={(val) => handleUpdate(index, { label: val })}
+                                    onChange={(e) => handleUpdate(index, { label: e.target.value })}
                                     placeholder="Zalo tư vấn..."
                                 />
                             </div>
@@ -120,14 +120,14 @@ export default function ContactChannelsManager({ value = [], onChange }: Contact
                             <FormField
                                 label="Giá trị (Value)"
                                 value={channel.value}
-                                onChange={(val) => handleUpdate(index, { value: val })}
+                                onChange={(e) => handleUpdate(index, { value: e.target.value })}
                                 placeholder="SĐT, Link, ID..."
                             />
 
                             <FormField
                                 label="URL Template"
                                 value={channel.url_template}
-                                onChange={(val) => handleUpdate(index, { url_template: val })}
+                                onChange={(e) => handleUpdate(index, { url_template: e.target.value })}
                                 placeholder="https://zalo.me/{value}"
                                 helpText="Dùng {value} để thay thế giá trị trên"
                             />
@@ -139,7 +139,7 @@ export default function ContactChannelsManager({ value = [], onChange }: Contact
                                     type="checkbox"
                                     label="Kích hoạt"
                                     value={channel.enabled}
-                                    onChange={(val) => handleUpdate(index, { enabled: !!val })}
+                                    onChange={(e) => handleUpdate(index, { enabled: e.target.checked })}
                                 />
 
                                 <div className="flex items-center gap-2">

@@ -1,10 +1,27 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Modal from "@/components/ui/Modal";
+import FormField from "@/components/ui/FormField";
 import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
 import api from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
+
+// 1. Define Group Schema
+const groupSchema = z.object({
+  type: z.string().min(1, "Loại group là bắt buộc"),
+  context_id: z.coerce.number().optional().nullable(),
+  code: z.string().min(1, "Mã code là bắt buộc").max(100, "Mã code không được vượt quá 100 ký tự"),
+  name: z.string().min(1, "Tên group là bắt buộc").max(255, "Tên group không được vượt quá 255 ký tự"),
+  description: z.string().max(500, "Mô tả không được vượt quá 500 ký tự").optional().nullable(),
+  metadata: z.record(z.any()).default({}),
+  metadata_json: z.string().optional().nullable(), // For custom types literal JSON
+});
+
+type GroupFormValues = z.infer<typeof groupSchema>;
 
 interface Group {
   id?: number;
@@ -26,7 +43,7 @@ interface GroupFormProps {
 }
 
 const getTypeLabel = (type?: string): string => {
-  if (!type) return type || "";
+  if (!type) return "";
   return type.charAt(0).toUpperCase() + type.slice(1);
 };
 
@@ -38,484 +55,280 @@ export default function GroupForm({
   onSubmit,
   onCancel,
 }: GroupFormProps) {
-  const formTitle = group ? "Chỉnh sửa group" : "Thêm group mới";
-
-  const [formData, setFormData] = useState<Partial<Group>>({
-    type: "",
-    context_id: null,
-    code: "",
-    name: "",
-    description: "",
-    metadata: {},
-  });
-
-  const [metadataJson, setMetadataJson] = useState("");
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [contexts, setContexts] = useState<Array<{ id: number; name: string; type: string }>>([]);
 
-  const contextOptions = useMemo(() => {
-    return contexts.map((ctx) => ({
-      value: ctx.id,
-      label: `${ctx.name} (${ctx.type})`,
-    }));
-  }, [contexts]);
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setError,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<GroupFormValues>({
+    resolver: zodResolver(groupSchema),
+    defaultValues: {
+      type: "",
+      context_id: null,
+      code: "",
+      name: "",
+      description: "",
+      metadata: {},
+      metadata_json: "",
+    },
+  });
 
+  const selectedType = useWatch({ control, name: "type" });
+
+  const contextOptions = useMemo(() =>
+    contexts.map((ctx) => ({ value: ctx.id, label: `${ctx.name} (${ctx.type})` })),
+    [contexts]);
+
+  // Load Contexts
   useEffect(() => {
     if (show) {
+      const loadContexts = async () => {
+        try {
+          const response = await api.get(`${adminEndpoints.contexts.list}?limit=1000`);
+          const data = response.data?.data || response.data || [];
+          setContexts(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.error("Failed to load contexts", err);
+        }
+      };
       loadContexts();
     }
   }, [show]);
 
+  // Reset/Initialize
   useEffect(() => {
-    if (group) {
-      setFormData({
-        type: group.type || "",
-        context_id: group.context_id || null,
-        code: group.code || "",
-        name: group.name || "",
-        description: group.description || "",
-        metadata: group.metadata ? { ...group.metadata } : {},
-      });
-      setMetadataJson(group.metadata ? JSON.stringify(group.metadata, null, 2) : "");
-    } else {
-      setFormData({
-        type: "",
-        context_id: null,
-        code: "",
-        name: "",
-        description: "",
-        metadata: {},
-      });
-      setMetadataJson("");
-    }
-    setValidationErrors({});
-  }, [group, show]);
-
-  const loadContexts = async () => {
-    try {
-      const response = await api.get(`${adminEndpoints.contexts.list}?limit=1000`);
-      let contextsData: any[] = [];
-      if (response.data?.success && Array.isArray(response.data.data)) {
-        contextsData = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        contextsData = response.data;
-      } else if (Array.isArray(response.data?.data)) {
-        contextsData = response.data.data;
-      }
-      setContexts(contextsData || []);
-    } catch (error) {
-      setContexts([]);
-    }
-  };
-
-  const parseMetadataJson = () => {
-    try {
-      if (metadataJson.trim()) {
-        const parsed = JSON.parse(metadataJson);
-        setFormData((prev) => ({ ...prev, metadata: parsed }));
-      } else {
-        setFormData((prev) => ({ ...prev, metadata: {} }));
-      }
-    } catch (e) {
-      // Invalid JSON, keep current metadata
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.type?.trim()) {
-      errors.type = "Loại group là bắt buộc";
-    }
-
-    if (!group && !formData.context_id) {
-      errors.context_id = "Context là bắt buộc";
-    }
-
-    if (!formData.code?.trim()) {
-      errors.code = "Mã code là bắt buộc";
-    } else if (formData.code.length > 100) {
-      errors.code = "Mã code không được vượt quá 100 ký tự";
-    }
-
-    if (!formData.name?.trim()) {
-      errors.name = "Tên group là bắt buộc";
-    } else if (formData.name.length > 255) {
-      errors.name = "Tên group không được vượt quá 255 ký tự";
-    }
-
-    if (formData.description && formData.description.length > 500) {
-      errors.description = "Mô tả không được vượt quá 500 ký tự";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    try {
-      // Prepare metadata based on type
-      let metadata: Record<string, any> = {};
-      if (formData.type === "shop") {
-        metadata = {
-          address: formData.metadata?.address || undefined,
-          phone: formData.metadata?.phone || undefined,
-          email: formData.metadata?.email || undefined,
-        };
-        Object.keys(metadata).forEach((key) => metadata[key] === undefined && delete metadata[key]);
-      } else if (formData.type === "team") {
-        metadata = {
-          leader: formData.metadata?.leader || undefined,
-          members_count: formData.metadata?.members_count || undefined,
-        };
-        Object.keys(metadata).forEach((key) => metadata[key] === undefined && delete metadata[key]);
-      } else if (formData.metadata && Object.keys(formData.metadata).length > 0) {
-        metadata = formData.metadata;
-      }
-
+    if (show) {
       if (group) {
-        // For update, only send allowed fields
-        const updateData: any = {};
-        if (formData.name) updateData.name = formData.name;
-        if (formData.description !== undefined) updateData.description = formData.description;
-        if (Object.keys(metadata).length > 0) updateData.metadata = metadata;
-        onSubmit?.(updateData);
+        reset({
+          type: group.type || "",
+          context_id: group.context_id || null,
+          code: group.code || "",
+          name: group.name || "",
+          description: group.description || "",
+          metadata: group.metadata || {},
+          metadata_json: group.metadata ? JSON.stringify(group.metadata, null, 2) : "",
+        });
       } else {
-        // For create
-        const submitData: any = {
-          type: formData.type,
-          code: formData.code,
-          name: formData.name,
-        };
-
-        if (formData.context_id) {
-          submitData.context_id = formData.context_id;
-        }
-
-        if (formData.description) {
-          submitData.description = formData.description;
-        }
-
-        if (Object.keys(metadata).length > 0) {
-          submitData.metadata = metadata;
-        }
-
-        onSubmit?.(submitData);
+        reset({
+          type: "",
+          context_id: null,
+          code: "",
+          name: "",
+          description: "",
+          metadata: {},
+          metadata_json: "",
+        });
       }
-    } finally {
-      setIsSubmitting(false);
     }
+  }, [group, show, reset]);
+
+  // Map API Errors
+  useEffect(() => {
+    if (apiErrors) {
+      Object.keys(apiErrors).forEach((key) => {
+        const message = Array.isArray(apiErrors[key]) ? apiErrors[key][0] : String(apiErrors[key]);
+        setError(key as any, { message });
+      });
+    }
+  }, [apiErrors, setError]);
+
+  const handleFormSubmit = (data: GroupFormValues) => {
+    // Basic validation for context_id on creation
+    if (!group && !data.context_id) {
+      setError("context_id", { message: "Context là bắt buộc khi tạo mới" });
+      return;
+    }
+
+    let finalMetadata = data.metadata;
+
+    // Handle JSON metadata if visible
+    if (selectedType !== "shop" && selectedType !== "team" && data.metadata_json) {
+      try {
+        finalMetadata = JSON.parse(data.metadata_json);
+      } catch (e) {
+        setError("metadata_json", { message: "JSON không hợp lệ" });
+        return;
+      }
+    }
+
+    const submitData = {
+      ...data,
+      metadata: finalMetadata,
+    };
+
+    // Cleanup metadata_json from submit
+    delete (submitData as any).metadata_json;
+
+    onSubmit?.(submitData);
   };
 
-  const handleClose = () => {
-    onCancel?.();
-  };
+  const formTitle = group ? "Chỉnh sửa group" : "Thêm group mới";
 
   if (!show) return null;
 
   return (
-    <Modal show={show} onClose={handleClose} title={formTitle} size="xl" loading={isSubmitting || loading}>
-      {loading ? (
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Đang tải dữ liệu...</span>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-8" onClick={(e) => e.stopPropagation()}>
-          {/* Thông tin group */}
-          <section className="space-y-4">
-            <header className="border-b border-gray-200 pb-3 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl" loading={loading || isSubmitting}>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8 p-1">
+
+        {/* SECTION: THÔNG TIN CHÍNH */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Thông tin Group</h3>
+              <p className="text-xs text-gray-500">Phân loại và định danh cho group</p>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              label="Loại group"
+              {...register("type")}
+              error={errors.type?.message}
+              disabled={!!group}
+              placeholder="shop, team, project, department..."
+              required
+              helpText={group ? "Không thể thay đổi loại group" : ""}
+            />
+
+            {!group && (
+              <Controller
+                name="context_id"
+                control={control}
+                render={({ field }) => (
+                  <SingleSelectEnhanced
+                    {...field}
+                    label="Context"
+                    options={contextOptions}
+                    placeholder="-- Chọn context --"
+                    error={errors.context_id?.message}
+                    required
+                  />
+                )}
+              />
+            )}
+
+            <FormField
+              label="Mã code"
+              {...register("code")}
+              error={errors.code?.message}
+              disabled={!!group}
+              placeholder="shop-001, team-dev..."
+              required
+            />
+
+            <FormField
+              label="Tên group"
+              {...register("name")}
+              error={errors.name?.message}
+              placeholder="Ví dụ: Development Team, Shop A..."
+              required
+            />
+          </div>
+
+          <FormField
+            label="Mô tả"
+            type="textarea"
+            rows={3}
+            {...register("description")}
+            error={errors.description?.message}
+            placeholder="Nhập mô tả chi tiết về group..."
+          />
+        </section>
+
+        {/* SECTION: THÔNG TIN BỔ SUNG (METADATA) */}
+        {selectedType && (
+          <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+            <header className="flex items-center space-x-3 mb-2">
+              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-              </span>
+              </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Thông tin group</h3>
-                <p className="text-sm text-gray-500">Nhập loại, mã code, tên và mô tả</p>
+                <h3 className="text-lg font-bold text-gray-900">Thông tin bổ sung</h3>
+                <p className="text-xs text-gray-500">Dữ liệu đặc thù cho loại {getTypeLabel(selectedType)}</p>
               </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Loại group */}
-              <div>
-                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-                  Loại group <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="type"
-                  type="text"
-                  value={formData.type || ""}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  disabled={!!group}
-                  placeholder="Ví dụ: shop, team, project, department..."
-                  className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    validationErrors.type || apiErrors.type ? "border-red-500 ring-2 ring-red-200" : "border-gray-300"
-                  } ${group ? "bg-gray-100" : ""}`}
+            {selectedType === "shop" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  label="Địa chỉ"
+                  {...register("metadata.address")}
+                  placeholder="Nhập địa chỉ shop..."
                 />
-                {validationErrors.type && <p className="mt-2 text-sm text-red-600">{validationErrors.type}</p>}
-                {apiErrors.type && !validationErrors.type && (
-                  <p className="mt-2 text-sm text-red-600">{Array.isArray(apiErrors.type) ? apiErrors.type[0] : apiErrors.type}</p>
-                )}
-                {group && <p className="mt-1 text-xs text-gray-500">Không thể thay đổi loại group sau khi tạo</p>}
-              </div>
-
-              {/* Context */}
-              {!group && (
-                <div>
-                  <label htmlFor="context_id" className="block text-sm font-medium text-gray-700 mb-2">
-                    Context <span className="text-red-500">*</span>
-                  </label>
-                  <SingleSelectEnhanced
-                    value={formData.context_id}
-                    onChange={(value) => setFormData({ ...formData, context_id: value as number | null })}
-                    options={contextOptions}
-                    placeholder="-- Chọn context --"
-                    error={validationErrors.context_id || (apiErrors.context_id ? String(apiErrors.context_id) : undefined)}
-                  />
-                  {validationErrors.context_id && <p className="mt-2 text-sm text-red-600">{validationErrors.context_id}</p>}
-                  {apiErrors.context_id && !validationErrors.context_id && (
-                    <p className="mt-2 text-sm text-red-600">{Array.isArray(apiErrors.context_id) ? apiErrors.context_id[0] : apiErrors.context_id}</p>
-                  )}
-                  <p className="mt-1 text-xs text-gray-500">Chọn context có sẵn. Nếu chưa có, hãy tạo context trước.</p>
-                </div>
-              )}
-
-              {/* Mã code */}
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mã code <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="code"
-                  type="text"
-                  value={formData.code || ""}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  disabled={!!group}
-                  placeholder="Ví dụ: shop-001, team-dev, project-abc"
-                  className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    validationErrors.code || apiErrors.code ? "border-red-500 ring-2 ring-red-200" : "border-gray-300"
-                  } ${group ? "bg-gray-100" : ""}`}
+                <FormField
+                  label="Số điện thoại"
+                  {...register("metadata.phone")}
+                  placeholder="Nhập SĐT liên hệ..."
                 />
-                {validationErrors.code && <p className="mt-2 text-sm text-red-600">{validationErrors.code}</p>}
-                {apiErrors.code && !validationErrors.code && (
-                  <p className="mt-2 text-sm text-red-600">{Array.isArray(apiErrors.code) ? apiErrors.code[0] : apiErrors.code}</p>
-                )}
-                {group && <p className="mt-1 text-xs text-gray-500">Không thể thay đổi mã code sau khi tạo</p>}
-              </div>
-
-              {/* Tên group */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên group <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={formData.name || ""}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ví dụ: Shop A, Development Team, Project ABC"
-                  className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    validationErrors.name || apiErrors.name ? "border-red-500 ring-2 ring-red-200" : "border-gray-300"
-                  }`}
+                <FormField
+                  label="Email"
+                  type="email"
+                  {...register("metadata.email")}
+                  placeholder="shop@example.com"
                 />
-                {validationErrors.name && <p className="mt-2 text-sm text-red-600">{validationErrors.name}</p>}
-                {apiErrors.name && !validationErrors.name && (
-                  <p className="mt-2 text-sm text-red-600">{Array.isArray(apiErrors.name) ? apiErrors.name[0] : apiErrors.name}</p>
-                )}
               </div>
+            )}
 
-              {/* Mô tả */}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mô tả
-                </label>
-                <textarea
-                  id="description"
-                  rows={3}
-                  value={formData.description || ""}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Nhập mô tả về group..."
-                  className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    validationErrors.description || apiErrors.description ? "border-red-500 ring-2 ring-red-200" : "border-gray-300"
-                  }`}
+            {selectedType === "team" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  label="Leader"
+                  {...register("metadata.leader")}
+                  placeholder="Tên trưởng nhóm..."
                 />
-                {validationErrors.description && <p className="mt-2 text-sm text-red-600">{validationErrors.description}</p>}
-                {apiErrors.description && !validationErrors.description && (
-                  <p className="mt-2 text-sm text-red-600">{Array.isArray(apiErrors.description) ? apiErrors.description[0] : apiErrors.description}</p>
-                )}
+                <FormField
+                  label="Số lượng members"
+                  type="number"
+                  {...register("metadata.members_count", { valueAsNumber: true })}
+                  placeholder="0"
+                />
               </div>
-            </div>
+            )}
+
+            {selectedType !== "shop" && selectedType !== "team" && (
+              <FormField
+                label="Cấu hình (JSON)"
+                type="textarea"
+                rows={5}
+                {...register("metadata_json")}
+                error={errors.metadata_json?.message}
+                placeholder='{ "key": "value" }'
+                className="font-mono text-sm"
+              />
+            )}
           </section>
+        )}
 
-          {/* Metadata */}
-          {formData.type && (
-            <section className="space-y-4">
-              <header className="border-b border-gray-200 pb-3 flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                </span>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Thông tin bổ sung</h3>
-                  <p className="text-sm text-gray-500">Metadata cho {getTypeLabel(formData.type)}</p>
-                </div>
-              </header>
-
-              {formData.type === "shop" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="metadata_address" className="block text-sm font-medium text-gray-700 mb-2">
-                      Địa chỉ
-                    </label>
-                    <input
-                      id="metadata_address"
-                      type="text"
-                      value={formData.metadata?.address || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          metadata: { ...formData.metadata, address: e.target.value },
-                        })
-                      }
-                      placeholder="Nhập địa chỉ..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="metadata_phone" className="block text-sm font-medium text-gray-700 mb-2">
-                      Số điện thoại
-                    </label>
-                    <input
-                      id="metadata_phone"
-                      type="text"
-                      value={formData.metadata?.phone || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          metadata: { ...formData.metadata, phone: e.target.value },
-                        })
-                      }
-                      placeholder="Nhập số điện thoại..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="metadata_email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <input
-                      id="metadata_email"
-                      type="email"
-                      value={formData.metadata?.email || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          metadata: { ...formData.metadata, email: e.target.value },
-                        })
-                      }
-                      placeholder="Nhập email..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {formData.type === "team" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="metadata_leader" className="block text-sm font-medium text-gray-700 mb-2">
-                      Leader
-                    </label>
-                    <input
-                      id="metadata_leader"
-                      type="text"
-                      value={formData.metadata?.leader || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          metadata: { ...formData.metadata, leader: e.target.value },
-                        })
-                      }
-                      placeholder="Nhập tên leader..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="metadata_members_count" className="block text-sm font-medium text-gray-700 mb-2">
-                      Số lượng members
-                    </label>
-                    <input
-                      id="metadata_members_count"
-                      type="number"
-                      min="0"
-                      value={formData.metadata?.members_count || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          metadata: { ...formData.metadata, members_count: e.target.value ? parseInt(e.target.value) : undefined },
-                        })
-                      }
-                      placeholder="Nhập số lượng..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {formData.type !== "shop" && formData.type !== "team" && (
-                <div>
-                  <label htmlFor="metadata_json" className="block text-sm font-medium text-gray-700 mb-2">
-                    Metadata (JSON)
-                  </label>
-                  <textarea
-                    id="metadata_json"
-                    rows={4}
-                    value={metadataJson}
-                    onChange={(e) => {
-                      setMetadataJson(e.target.value);
-                      parseMetadataJson();
-                    }}
-                    onBlur={parseMetadataJson}
-                    placeholder='{"key": "value"}'
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Nhập metadata dưới dạng JSON</p>
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Đang xử lý..." : group ? "Cập nhật group" : "Thêm group mới"}
-            </button>
-          </div>
-        </form>
-      )}
+        {/* FOOTER ACTIONS */}
+        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-8 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || loading}
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {isSubmitting ? "Đang xử lý..." : group ? "Cập nhật group" : "Thêm group mới"}
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 }

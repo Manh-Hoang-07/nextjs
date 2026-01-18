@@ -1,7 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Modal from "@/components/ui/Modal";
+import FormField from "@/components/ui/FormField";
+
+// 1. Define Warehouse Schema
+const warehouseSchema = z.object({
+  code: z.string().min(1, "Mã kho là bắt buộc").max(100, "Mã kho tối đa 100 ký tự"),
+  name: z.string().min(1, "Tên kho là bắt buộc").max(255, "Tên kho tối đa 255 ký tự"),
+  address: z.string().max(500).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  district: z.string().max(100).optional().nullable(),
+  latitude: z.coerce.number().optional().nullable(),
+  longitude: z.coerce.number().optional().nullable(),
+  phone: z.string().max(20).optional().nullable(),
+  manager_name: z.string().max(255).optional().nullable(),
+  priority: z.coerce.number().int().min(0, "Độ ưu tiên không được âm").default(0),
+  is_active: z.boolean().default(true),
+});
+
+type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 
 interface Warehouse {
   id?: number;
@@ -33,411 +54,235 @@ export default function WarehouseForm({
   onSubmit,
   onCancel,
 }: WarehouseFormProps) {
-  const formTitle = warehouse ? "Chỉnh sửa kho hàng" : "Thêm kho hàng mới";
-
-  const [formData, setFormData] = useState<Partial<Warehouse>>({
-    code: "",
-    name: "",
-    address: "",
-    city: "",
-    district: "",
-    latitude: null,
-    longitude: null,
-    phone: "",
-    manager_name: "",
-    priority: 0,
-    is_active: true,
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<WarehouseFormValues>({
+    resolver: zodResolver(warehouseSchema),
+    defaultValues: {
+      code: "",
+      name: "",
+      address: "",
+      city: "",
+      district: "",
+      latitude: null,
+      longitude: null,
+      phone: "",
+      manager_name: "",
+      priority: 0,
+      is_active: true,
+    },
   });
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // Reset/Initialize
   useEffect(() => {
-    if (warehouse) {
-      setFormData({
-        code: warehouse.code || "",
-        name: warehouse.name || "",
-        address: warehouse.address || "",
-        city: warehouse.city || "",
-        district: warehouse.district || "",
-        latitude: warehouse.latitude ? parseFloat(String(warehouse.latitude)) : null,
-        longitude: warehouse.longitude ? parseFloat(String(warehouse.longitude)) : null,
-        phone: warehouse.phone || "",
-        manager_name: warehouse.manager_name || "",
-        priority: warehouse.priority || 0,
-        is_active: warehouse.is_active !== undefined ? warehouse.is_active : true,
+    if (show) {
+      if (warehouse) {
+        reset({
+          code: warehouse.code || "",
+          name: warehouse.name || "",
+          address: warehouse.address || "",
+          city: warehouse.city || "",
+          district: warehouse.district || "",
+          latitude: warehouse.latitude,
+          longitude: warehouse.longitude,
+          phone: warehouse.phone || "",
+          manager_name: warehouse.manager_name || "",
+          priority: warehouse.priority || 0,
+          is_active: warehouse.is_active !== undefined ? warehouse.is_active : true,
+        });
+      } else {
+        reset({
+          code: "",
+          name: "",
+          address: "",
+          city: "",
+          district: "",
+          latitude: null,
+          longitude: null,
+          phone: "",
+          manager_name: "",
+          priority: 0,
+          is_active: true,
+        });
+      }
+    }
+  }, [warehouse, show, reset]);
+
+  // Map API Errors
+  useEffect(() => {
+    if (apiErrors) {
+      Object.keys(apiErrors).forEach((key) => {
+        const message = Array.isArray(apiErrors[key]) ? apiErrors[key][0] : String(apiErrors[key]);
+        setError(key as any, { message });
       });
-    } else {
-      setFormData({
-        code: "",
-        name: "",
-        address: "",
-        city: "",
-        district: "",
-        latitude: null,
-        longitude: null,
-        phone: "",
-        manager_name: "",
-        priority: 0,
-        is_active: true,
-      });
     }
-    setValidationErrors({});
-  }, [warehouse, show]);
+  }, [apiErrors, setError]);
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.code?.trim()) {
-      errors.code = "Mã kho là bắt buộc";
-    } else if (formData.code.length > 100) {
-      errors.code = "Mã kho tối đa 100 ký tự";
-    }
-
-    if (!formData.name?.trim()) {
-      errors.name = "Tên kho là bắt buộc";
-    } else if (formData.name.length > 255) {
-      errors.name = "Tên kho tối đa 255 ký tự";
-    }
-
-    if (formData.city && formData.city.length > 100) {
-      errors.city = "Thành phố tối đa 100 ký tự";
-    }
-
-    if (formData.district && formData.district.length > 100) {
-      errors.district = "Quận/Huyện tối đa 100 ký tự";
-    }
-
-    if (formData.phone && formData.phone.length > 20) {
-      errors.phone = "Số điện thoại tối đa 20 ký tự";
-    }
-
-    if (formData.manager_name && formData.manager_name.length > 255) {
-      errors.manager_name = "Tên người quản lý tối đa 255 ký tự";
-    }
-
-    if (formData.priority !== undefined && formData.priority < 0) {
-      errors.priority = "Độ ưu tiên phải >= 0";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    try {
-      const submitData: any = {
-        code: formData.code,
-        name: formData.name,
-      };
-
-      if (formData.address) submitData.address = formData.address;
-      if (formData.city) submitData.city = formData.city;
-      if (formData.district) submitData.district = formData.district;
-      if (formData.latitude !== null) submitData.latitude = formData.latitude;
-      if (formData.longitude !== null) submitData.longitude = formData.longitude;
-      if (formData.phone) submitData.phone = formData.phone;
-      if (formData.manager_name) submitData.manager_name = formData.manager_name;
-      if (formData.priority !== undefined) submitData.priority = formData.priority;
-      if (formData.is_active !== undefined) submitData.is_active = formData.is_active;
-
-      onSubmit?.(submitData);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleClose = () => {
-    onCancel?.();
-  };
+  const formTitle = warehouse ? "Chỉnh sửa kho hàng" : "Thêm kho hàng mới";
 
   if (!show) return null;
 
   return (
-    <Modal show={show} onClose={handleClose} title={formTitle} size="xl" loading={isSubmitting}>
-      <form onSubmit={handleSubmit} className="space-y-6" onClick={(e) => e.stopPropagation()}>
-        {/* Thông tin cơ bản */}
-        <div className="space-y-4">
-          <div className="border-b border-gray-200 pb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Thông tin cơ bản</h3>
-            <p className="text-sm text-gray-600 mt-1">Nhập thông tin chung cho kho hàng</p>
-          </div>
+    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl" loading={isSubmitting}>
+      <form onSubmit={handleSubmit((data) => onSubmit?.(data))} className="space-y-8 p-1">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Mã kho */}
-            <div>
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-                Mã kho <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="code"
-                type="text"
-                value={formData.code || ""}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                disabled={!!warehouse}
-                placeholder="Ví dụ: WH-HCM-01, WH-HN-01"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                  validationErrors.code || apiErrors.code ? "border-red-500" : "border-gray-300"
-                } ${warehouse ? "bg-gray-100" : ""}`}
-              />
-              {validationErrors.code && <p className="mt-1 text-sm text-red-600">{validationErrors.code}</p>}
-              {apiErrors.code && !validationErrors.code && (
-                <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.code) ? apiErrors.code[0] : apiErrors.code}</p>
-              )}
-              {warehouse && <p className="mt-1 text-xs text-gray-500">Mã kho không thể thay đổi sau khi tạo</p>}
+        {/* SECTION: THÔNG TIN CƠ BẢN */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
             </div>
-
-            {/* Tên kho */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Tên kho <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={formData.name || ""}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ví dụ: Kho Chính - TP.HCM"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                  validationErrors.name || apiErrors.name ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {validationErrors.name && <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>}
-              {apiErrors.name && !validationErrors.name && (
-                <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.name) ? apiErrors.name[0] : apiErrors.name}</p>
-              )}
+              <h3 className="text-lg font-bold text-gray-900">Thông tin cơ bản</h3>
+              <p className="text-xs text-gray-500">Mã định danh và tên gọi của kho</p>
             </div>
-          </div>
-        </div>
+          </header>
 
-        {/* Địa chỉ */}
-        <div className="space-y-4">
-          <div className="border-b border-gray-200 pb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Địa chỉ</h3>
-            <p className="text-sm text-gray-600 mt-1">Thông tin địa chỉ và liên hệ của kho</p>
-          </div>
-
-          {/* Địa chỉ */}
-          <div>
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-              Địa chỉ
-            </label>
-            <input
-              id="address"
-              type="text"
-              value={formData.address || ""}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Ví dụ: 123 Nguyễn Văn Linh, Quận 7"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                validationErrors.address || apiErrors.address ? "border-red-500" : "border-gray-300"
-              }`}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              label="Mã kho"
+              {...register("code")}
+              placeholder="Ví dụ: WH-HCM-01"
+              error={errors.code?.message}
+              required
+              disabled={!!warehouse}
+              helpText={warehouse ? "Mã kho không thể thay đổi" : undefined}
             />
-            {validationErrors.address && <p className="mt-1 text-sm text-red-600">{validationErrors.address}</p>}
-            {apiErrors.address && !validationErrors.address && (
-              <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.address) ? apiErrors.address[0] : apiErrors.address}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Thành phố */}
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                Thành phố
-              </label>
-              <input
-                id="city"
-                type="text"
-                value={formData.city || ""}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                placeholder="Ví dụ: TP. Hồ Chí Minh"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                  validationErrors.city || apiErrors.city ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {validationErrors.city && <p className="mt-1 text-sm text-red-600">{validationErrors.city}</p>}
-              {apiErrors.city && !validationErrors.city && (
-                <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.city) ? apiErrors.city[0] : apiErrors.city}</p>
-              )}
-            </div>
-
-            {/* Quận/Huyện */}
-            <div>
-              <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1">
-                Quận/Huyện
-              </label>
-              <input
-                id="district"
-                type="text"
-                value={formData.district || ""}
-                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                placeholder="Ví dụ: Quận 7"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                  validationErrors.district || apiErrors.district ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {validationErrors.district && <p className="mt-1 text-sm text-red-600">{validationErrors.district}</p>}
-              {apiErrors.district && !validationErrors.district && (
-                <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.district) ? apiErrors.district[0] : apiErrors.district}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Tọa độ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Vĩ độ */}
-            <div>
-              <label htmlFor="latitude" className="block text-sm font-medium text-gray-700 mb-1">
-                Vĩ độ
-              </label>
-              <input
-                id="latitude"
-                type="number"
-                step="0.0000001"
-                value={formData.latitude ?? ""}
-                onChange={(e) => setFormData({ ...formData, latitude: e.target.value ? parseFloat(e.target.value) : null })}
-                placeholder="Ví dụ: 10.7300000"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                  validationErrors.latitude || apiErrors.latitude ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {validationErrors.latitude && <p className="mt-1 text-sm text-red-600">{validationErrors.latitude}</p>}
-              {apiErrors.latitude && !validationErrors.latitude && (
-                <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.latitude) ? apiErrors.latitude[0] : apiErrors.latitude}</p>
-              )}
-            </div>
-
-            {/* Kinh độ */}
-            <div>
-              <label htmlFor="longitude" className="block text-sm font-medium text-gray-700 mb-1">
-                Kinh độ
-              </label>
-              <input
-                id="longitude"
-                type="number"
-                step="0.0000001"
-                value={formData.longitude ?? ""}
-                onChange={(e) => setFormData({ ...formData, longitude: e.target.value ? parseFloat(e.target.value) : null })}
-                placeholder="Ví dụ: 106.7200000"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                  validationErrors.longitude || apiErrors.longitude ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {validationErrors.longitude && <p className="mt-1 text-sm text-red-600">{validationErrors.longitude}</p>}
-              {apiErrors.longitude && !validationErrors.longitude && (
-                <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.longitude) ? apiErrors.longitude[0] : apiErrors.longitude}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Số điện thoại */}
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-              Số điện thoại
-            </label>
-            <input
-              id="phone"
-              type="text"
-              value={formData.phone || ""}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="Ví dụ: 02812345678"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                validationErrors.phone || apiErrors.phone ? "border-red-500" : "border-gray-300"
-              }`}
+            <FormField
+              label="Tên kho"
+              {...register("name")}
+              placeholder="Ví dụ: Kho Tổng Miền Nam"
+              error={errors.name?.message}
+              required
             />
-            {validationErrors.phone && <p className="mt-1 text-sm text-red-600">{validationErrors.phone}</p>}
-            {apiErrors.phone && !validationErrors.phone && (
-              <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.phone) ? apiErrors.phone[0] : apiErrors.phone}</p>
-            )}
           </div>
-        </div>
+        </section>
 
-        {/* Thông tin quản lý */}
-        <div className="space-y-4">
-          <div className="border-b border-gray-200 pb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Thông tin quản lý</h3>
-            <p className="text-sm text-gray-600 mt-1">Thiết lập thông tin quản lý và ưu tiên</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Tên người quản lý */}
-            <div>
-              <label htmlFor="manager_name" className="block text-sm font-medium text-gray-700 mb-1">
-                Tên người quản lý
-              </label>
-              <input
-                id="manager_name"
-                type="text"
-                value={formData.manager_name || ""}
-                onChange={(e) => setFormData({ ...formData, manager_name: e.target.value })}
-                placeholder="Ví dụ: Nguyễn Văn A"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                  validationErrors.manager_name || apiErrors.manager_name ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {validationErrors.manager_name && <p className="mt-1 text-sm text-red-600">{validationErrors.manager_name}</p>}
-              {apiErrors.manager_name && !validationErrors.manager_name && (
-                <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.manager_name) ? apiErrors.manager_name[0] : apiErrors.manager_name}</p>
-              )}
+        {/* SECTION: ĐỊA CHỈ & LIÊN HỆ */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
             </div>
-
-            {/* Độ ưu tiên */}
             <div>
-              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
-                Độ ưu tiên
-              </label>
-              <input
-                id="priority"
-                type="number"
-                min="0"
-                value={formData.priority ?? 0}
-                onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
-                placeholder="0"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                  validationErrors.priority || apiErrors.priority ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {validationErrors.priority && <p className="mt-1 text-sm text-red-600">{validationErrors.priority}</p>}
-              {apiErrors.priority && !validationErrors.priority && (
-                <p className="mt-1 text-sm text-red-600">{Array.isArray(apiErrors.priority) ? apiErrors.priority[0] : apiErrors.priority}</p>
-              )}
-              <p className="mt-1 text-xs text-gray-500">Kho có độ ưu tiên cao hơn sẽ được ưu tiên khi phân phối</p>
+              <h3 className="text-lg font-bold text-gray-900">Địa chỉ & Liên hệ</h3>
+              <p className="text-xs text-gray-500">Thông tin vị trí vật lý và phương thức kết nối</p>
             </div>
-          </div>
+          </header>
 
-          {/* Trạng thái hoạt động */}
-          <div className="flex items-center">
-            <input
-              id="is_active"
-              type="checkbox"
-              checked={formData.is_active ?? true}
-              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <FormField
+                label="Địa chỉ chi tiết"
+                {...register("address")}
+                placeholder="Số nhà, tên đường, phường/xã..."
+                error={errors.address?.message}
+              />
+            </div>
+            <FormField
+              label="Thành phố / Tỉnh"
+              {...register("city")}
+              placeholder="Ví dụ: TP. Hồ Chí Minh"
+              error={errors.city?.message}
             />
-            <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
-              Kho đang hoạt động
-            </label>
+            <FormField
+              label="Quận / Huyện"
+              {...register("district")}
+              placeholder="Ví dụ: Quận 7"
+              error={errors.district?.message}
+            />
+            <FormField
+              label="Vĩ độ (Latitude)"
+              type="number"
+              step="0.0000001"
+              {...register("latitude")}
+              placeholder="10.7300000"
+              error={errors.latitude?.message}
+            />
+            <FormField
+              label="Kinh độ (Longitude)"
+              type="number"
+              step="0.0000001"
+              {...register("longitude")}
+              placeholder="106.7200000"
+              error={errors.longitude?.message}
+            />
+            <FormField
+              label="Số điện thoại"
+              {...register("phone")}
+              placeholder="028 xxxx xxxx"
+              error={errors.phone?.message}
+            />
+            <FormField
+              label="Người quản lý"
+              {...register("manager_name")}
+              placeholder="Nguyễn Văn A"
+              error={errors.manager_name?.message}
+            />
           </div>
-        </div>
+        </section>
 
-        {/* Buttons */}
-        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+        {/* SECTION: CẤU HÌNH VẬN HÀNH */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Cấu hình vận hành</h3>
+              <p className="text-xs text-gray-500">Thiết lập trạng thái và độ ưu tiên điều phối</p>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <FormField
+              label="Độ ưu tiên điều phối"
+              type="number"
+              {...register("priority")}
+              helpText="Giá trị càng lớn, kho càng được ưu tiên"
+              error={errors.priority?.message}
+            />
+            <div className="flex items-center space-x-3 p-4 bg-white rounded-xl border border-gray-200">
+              <input
+                type="checkbox"
+                id="is_active"
+                {...register("is_active")}
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="is_active" className="text-sm font-bold text-gray-700 cursor-pointer">
+                Kho đang hoạt động
+              </label>
+            </div>
+          </div>
+        </section>
+
+        {/* FOOTER ACTIONS */}
+        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
           <button
             type="button"
-            onClick={handleClose}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+            onClick={onCancel}
+            className="px-8 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95"
           >
-            Hủy
+            Hủy bỏ
           </button>
           <button
             type="submit"
-            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isSubmitting}
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
-            {isSubmitting ? "Đang xử lý..." : warehouse ? "Cập nhật kho hàng" : "Thêm kho hàng mới"}
+            {isSubmitting ? "Đang xử lý..." : warehouse ? "Cập nhật kho hàng" : "Thêm kho hàng"}
           </button>
         </div>
       </form>

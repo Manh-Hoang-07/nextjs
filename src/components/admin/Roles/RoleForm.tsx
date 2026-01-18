@@ -1,17 +1,27 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Modal from "@/components/ui/Modal";
+import FormField from "@/components/ui/FormField";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
 import MultipleSelect from "@/components/ui/MultipleSelect";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import api from "@/lib/api/client";
 
-const getBasicStatusArray = () => [
-  { value: "active", label: "Hoạt động" },
-  { value: "inactive", label: "Ngừng hoạt động" },
-];
+// 1. Define Role Schema
+const roleSchema = z.object({
+  code: z.string().min(1, "Mã code là bắt buộc").max(100, "Mã code không được vượt quá 100 ký tự"),
+  name: z.string().max(150, "Tên vai trò không được vượt quá 150 ký tự").optional().nullable(),
+  parent_id: z.coerce.number().optional().nullable(),
+  status: z.string().default("active"),
+  context_ids: z.array(z.number()).default([]),
+});
+
+type RoleFormValues = z.infer<typeof roleSchema>;
 
 interface Role {
   id?: number;
@@ -19,7 +29,6 @@ interface Role {
   name?: string;
   parent_id?: number | null;
   status?: string;
-  context_ids?: number[];
   contexts?: Array<{ id: number; name: string; type: string }>;
 }
 
@@ -42,347 +51,222 @@ export default function RoleForm({
   onSubmit,
   onCancel,
 }: RoleFormProps) {
-  const formTitle = role ? "Chỉnh sửa vai trò" : "Thêm vai trò mới";
-
-  const [formData, setFormData] = useState<Partial<Role>>({
-    code: "",
-    name: "",
-    parent_id: null,
-    status: "active",
-    context_ids: [],
-  });
-
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [contexts, setContexts] = useState<Array<{ id: number; name: string; type: string }>>([]);
 
-  const statusOptions = useMemo(() => {
-    const statusArray = statusEnums && statusEnums.length > 0 ? statusEnums : getBasicStatusArray();
-    return statusArray.map((opt) => ({
-      value: opt.value,
-      label: opt.label || (opt as any).name || opt.value,
-    }));
-  }, [statusEnums]);
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<RoleFormValues>({
+    resolver: zodResolver(roleSchema),
+    defaultValues: {
+      code: "",
+      name: "",
+      parent_id: null,
+      status: "active",
+      context_ids: [],
+    },
+  });
 
-  const contextOptions = useMemo(() => {
-    return contexts.map((ctx) => ({
-      value: ctx.id,
-      label: `${ctx.name} (${ctx.type})`,
-    }));
-  }, [contexts]);
+  const contextOptions = useMemo(() =>
+    contexts.map((ctx) => ({ value: ctx.id, label: `${ctx.name} (${ctx.type})` })),
+    [contexts]);
 
+  const statusOptions = useMemo(() =>
+    statusEnums.length > 0
+      ? statusEnums.map(opt => ({ value: opt.value, label: opt.label || (opt as any).name || opt.value }))
+      : [{ value: "active", label: "Hoạt động" }, { value: "inactive", label: "Ngừng hoạt động" }],
+    [statusEnums]);
+
+  // Load Contexts
   useEffect(() => {
     if (show) {
+      const loadContexts = async () => {
+        try {
+          const response = await api.get(adminEndpoints.contexts.list);
+          const data = response.data?.data || response.data || [];
+          setContexts(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.error("Failed to load contexts", err);
+        }
+      };
       loadContexts();
     }
   }, [show]);
 
+  // Reset/Initialize
   useEffect(() => {
-    if (role) {
-      setFormData({
-        code: role.code || "",
-        name: role.name || "",
-        parent_id: role.parent_id || null,
-        status: role.status || "active",
-        context_ids:
-          role.context_ids && Array.isArray(role.context_ids)
-            ? role.context_ids
-            : role.contexts && Array.isArray(role.contexts)
-              ? role.contexts.map((ctx) => ctx.id)
-              : [],
+    if (show) {
+      if (role) {
+        reset({
+          code: role.code || "",
+          name: role.name || "",
+          parent_id: role.parent_id || null,
+          status: role.status || "active",
+          context_ids: role.contexts?.map(ctx => ctx.id) || [],
+        });
+      } else {
+        reset({
+          code: "",
+          name: "",
+          parent_id: null,
+          status: "active",
+          context_ids: [],
+        });
+      }
+    }
+  }, [role, show, reset]);
+
+  // Map API Errors
+  useEffect(() => {
+    if (apiErrors) {
+      Object.keys(apiErrors).forEach((key) => {
+        const message = Array.isArray(apiErrors[key]) ? apiErrors[key][0] : String(apiErrors[key]);
+        setError(key as any, { message });
       });
-    } else {
-      setFormData({
-        code: "",
-        name: "",
-        parent_id: null,
-        status: "active",
-        context_ids: [],
-      });
     }
-    setValidationErrors({});
-  }, [role, show]);
+  }, [apiErrors, setError]);
 
-  const loadContexts = async () => {
-    try {
-      const response = await api.get(adminEndpoints.contexts.list);
-      let contextsData: any[] = [];
-      if (Array.isArray(response.data)) {
-        contextsData = response.data;
-      } else if (response.data?.success && Array.isArray(response.data.data)) {
-        contextsData = response.data.data;
-      } else if (Array.isArray(response.data?.data)) {
-        contextsData = response.data.data;
-      }
-      setContexts(contextsData || []);
-    } catch (error) {
-      setContexts([]);
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.code?.trim()) {
-      errors.code = "Mã code là bắt buộc";
-    } else if (formData.code.length > 100) {
-      errors.code = "Mã code không được vượt quá 100 ký tự";
-    }
-
-    if (formData.name && formData.name.length > 150) {
-      errors.name = "Tên vai trò không được vượt quá 150 ký tự";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    try {
-      const submitData: any = {
-        code: formData.code,
-        status: formData.status || "active",
-      };
-
-      if (formData.name) {
-        submitData.name = formData.name;
-      }
-
-      if (formData.parent_id) {
-        submitData.parent_id = formData.parent_id;
-      }
-
-      if (formData.context_ids && formData.context_ids.length > 0) {
-        submitData.context_ids = formData.context_ids;
-      }
-
-      onSubmit?.(submitData);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleClose = () => {
-    onCancel?.();
-  };
+  const formTitle = role ? "Chỉnh sửa vai trò" : "Thêm vai trò mới";
 
   if (!show) return null;
 
   return (
-    <Modal show={show} onClose={handleClose} title={formTitle} size="xl" loading={isSubmitting || loading}>
-      {loading ? (
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Đang tải dữ liệu...</span>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-8" onClick={(e) => e.stopPropagation()}>
-          {/* Thông tin vai trò */}
-          <section className="space-y-4">
-            <header className="border-b border-gray-200 pb-3 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </span>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Thông tin vai trò</h3>
-                <p className="text-sm text-gray-500">Nhập mã code, tên và trạng thái</p>
-              </div>
-            </header>
+    <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl" loading={loading || isSubmitting}>
+      <form onSubmit={handleSubmit((data) => onSubmit?.(data))} className="space-y-8 p-1">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Mã code */}
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mã code <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="code"
-                  type="text"
-                  value={formData.code || ""}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  disabled={!!role}
-                  placeholder="Ví dụ: admin, manager, editor"
-                  className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors.code || apiErrors.code
-                      ? "border-red-500 ring-2 ring-red-200"
-                      : "border-gray-300"
-                    } ${role ? "bg-gray-100" : ""}`}
-                />
-                {validationErrors.code && <p className="mt-2 text-sm text-red-600">{validationErrors.code}</p>}
-                {apiErrors.code && !validationErrors.code && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {Array.isArray(apiErrors.code) ? apiErrors.code[0] : apiErrors.code}
-                  </p>
-                )}
-                {role && <p className="mt-1 text-xs text-gray-500">Không thể thay đổi mã code sau khi tạo</p>}
-              </div>
-
-              {/* Tên vai trò */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên vai trò
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={formData.name || ""}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ví dụ: Admin, Manager, Editor"
-                  className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors.name || apiErrors.name ? "border-red-500 ring-2 ring-red-200" : "border-gray-300"
-                    }`}
-                />
-                {validationErrors.name && <p className="mt-2 text-sm text-red-600">{validationErrors.name}</p>}
-                {apiErrors.name && !validationErrors.name && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {Array.isArray(apiErrors.name) ? apiErrors.name[0] : apiErrors.name}
-                  </p>
-                )}
-              </div>
+        {/* SECTION: THÔNG TIN VAI TRÒ */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
             </div>
-          </section>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Thông tin định danh</h3>
+              <p className="text-xs text-gray-500">Mã code hệ thống và tên vai trò</p>
+            </div>
+          </header>
 
-          {/* Liên kết & trạng thái */}
-          <section className="space-y-4">
-            <header className="border-b border-gray-200 pb-3 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 10l4.553-4.553a1 1 0 00-1.414-1.414L13 8.172M5 13l-4.553 4.553a1 1 0 001.414 1.414L7 15.828"
-                  ></path>
-                </svg>
-              </span>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Liên kết & trạng thái</h3>
-                <p className="text-sm text-gray-500">Chọn vai trò cha và trạng thái</p>
-              </div>
-            </header>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              label="Mã code"
+              {...register("code")}
+              error={errors.code?.message}
+              disabled={!!role}
+              placeholder="admin, manager, editor..."
+              required
+              helpText={role ? "Không thể thay đổi mã code sau khi tạo" : "Sử dụng chữ thường, không dấu, phân cách bằng gạch ngang"}
+            />
+            <FormField
+              label="Tên vai trò"
+              {...register("name")}
+              error={errors.name?.message}
+              placeholder="Quản trị viên, Biên tập viên..."
+            />
+          </div>
+        </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Vai trò cha */}
-              <div>
-                <label htmlFor="parent_id" className="block text-sm font-medium text-gray-700 mb-2">
-                  Vai trò cha
-                </label>
+        {/* SECTION: CẤU TRÚC & TRẠNG THÁI */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Phân cấp & Trạng thái</h3>
+              <p className="text-xs text-gray-500">Thiết lập quan hệ cha-con và tính khả dụng</p>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Controller
+              name="parent_id"
+              control={control}
+              render={({ field }) => (
                 <SearchableSelect
-                  value={formData.parent_id}
-                  onChange={(value) => setFormData({ ...formData, parent_id: value as number | null })}
+                  {...field}
+                  label="Vai trò cha"
                   searchApi={adminEndpoints.roles.list}
                   placeholder="Tìm kiếm vai trò cha..."
-                  error={
-                    validationErrors.parent_id ||
-                    (apiErrors.parent_id ? String(apiErrors.parent_id) : undefined)
-                  }
                   excludeId={role?.id}
                   labelField="name"
+                  error={errors.parent_id?.message}
                 />
-                {validationErrors.parent_id && (
-                  <p className="mt-2 text-sm text-red-600">{validationErrors.parent_id}</p>
-                )}
-                {apiErrors.parent_id && !validationErrors.parent_id && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {Array.isArray(apiErrors.parent_id) ? apiErrors.parent_id[0] : apiErrors.parent_id}
-                  </p>
-                )}
-              </div>
-
-              {/* Trạng thái */}
-              <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-                  Trạng thái
-                </label>
+              )}
+            />
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
                 <SingleSelectEnhanced
-                  value={formData.status || "active"}
-                  onChange={(value) => setFormData({ ...formData, status: value as string })}
+                  {...field}
+                  label="Trạng thái"
                   options={statusOptions}
                   placeholder="-- Chọn trạng thái --"
-                  error={
-                    validationErrors.status || (apiErrors.status ? String(apiErrors.status) : undefined)
-                  }
+                  error={errors.status?.message}
                   required
                 />
-                {validationErrors.status && <p className="mt-2 text-sm text-red-600">{validationErrors.status}</p>}
-                {apiErrors.status && !validationErrors.status && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {Array.isArray(apiErrors.status) ? apiErrors.status[0] : apiErrors.status}
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* Contexts */}
-          <section className="space-y-4">
-            <header className="border-b border-gray-200 pb-3 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  ></path>
-                </svg>
-              </span>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Contexts</h3>
-                <p className="text-sm text-gray-500">
-                  Chọn contexts mà role này sẽ được gán (để trống nếu chỉ dành cho system admin)
-                </p>
-              </div>
-            </header>
-
-            <div>
-              <label htmlFor="context_ids" className="block text-sm font-medium text-gray-700 mb-2">
-                Contexts
-              </label>
-              <MultipleSelect
-                value={formData.context_ids || []}
-                onChange={(value) => setFormData({ ...formData, context_ids: value as number[] })}
-                options={contextOptions}
-                placeholder="Chọn contexts..."
-                error={validationErrors.context_ids || (apiErrors.context_ids ? String(apiErrors.context_ids) : undefined)}
-              />
-              {validationErrors.context_ids && (
-                <p className="mt-2 text-sm text-red-600">{validationErrors.context_ids}</p>
               )}
-              {apiErrors.context_ids && !validationErrors.context_ids && (
-                <p className="mt-2 text-sm text-red-600">
-                  {Array.isArray(apiErrors.context_ids) ? apiErrors.context_ids[0] : apiErrors.context_ids}
-                </p>
-              )}
-              <p className="mt-1 text-xs text-gray-500">
-                Nếu không chọn contexts, role này chỉ hiển thị cho system admin
-              </p>
-            </div>
-          </section>
-
-          {/* Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Đang xử lý..." : role ? "Cập nhật vai trò" : "Thêm vai trò mới"}
-            </button>
+            />
           </div>
-        </form>
-      )}
+        </section>
+
+        {/* SECTION: PHẠM VI ÁP DỤNG */}
+        <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+          <header className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-green-100 rounded-lg text-green-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h1.5a2.5 2.5 0 012.5 2.5V14a2 2 0 002 2h1.545M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Contexts (Phạm vi)</h3>
+              <p className="text-xs text-gray-500">Giới hạn vai trò trong các khu vực cụ thể</p>
+            </div>
+          </header>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">Gán cho Contexts</label>
+            <Controller
+              name="context_ids"
+              control={control}
+              render={({ field }) => (
+                <MultipleSelect
+                  {...field}
+                  options={contextOptions}
+                  placeholder="Chọn contexts..."
+                />
+              )}
+            />
+            <p className="text-[10px] text-gray-400 mt-1 italic">* Để trống nếu đây là vai trò dành cho System Admin</p>
+          </div>
+        </section>
+
+        {/* FOOTER ACTIONS */}
+        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-8 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || loading}
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {isSubmitting ? "Đang xử lý..." : role ? "Cập nhật vai trò" : "Thêm vai trò mới"}
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 }
