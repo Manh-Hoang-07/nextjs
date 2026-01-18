@@ -8,6 +8,7 @@ import Image from "next/image";
 import { getSystemConfig } from "@/lib/api/public";
 import { Metadata } from "next";
 import PageMeta from "@/components/ui/PageMeta";
+import HeroBanner from "@/components/public/banners/HeroBanner";
 
 export async function generateMetadata(): Promise<Metadata> {
     const systemConfig = await getSystemConfig("general");
@@ -66,51 +67,20 @@ export default async function LandingPage() {
                 ]}
             />
 
-            {/* Hero Section */}
-            <section className="relative overflow-hidden bg-background pt-32 md:pt-40 lg:pt-48 pb-20">
-                <div className="absolute top-0 left-0 -z-10 h-full w-full bg-white">
-                    <div className="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-primary/20 opacity-50 blur-[80px]"></div>
-                </div>
-
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
-                        <div className="flex-1 text-center lg:text-left">
-                            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-                                <span className="block text-primary">Công Ty Xây Dựng</span>
-                                <span className="block">Uy Tín & Chất Lượng</span>
-                            </h1>
-                            <p className="mt-6 text-lg text-gray-600 sm:text-xl max-w-2xl mx-auto lg:mx-0">
-                                {defaultHero.subtitle}
-                            </p>
-                            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                                <Link href={defaultHero.ctaLink}>
-                                    <Button size="lg" className="w-full sm:w-auto text-base px-8 py-6 h-auto shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
-                                        {defaultHero.ctaText}
-                                    </Button>
-                                </Link>
-                                <Link href="/home/contact">
-                                    <Button variant="outline" size="lg" className="w-full sm:w-auto text-base px-8 py-6 h-auto">
-                                        Liên Hệ Ngay
-                                    </Button>
-                                </Link>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 w-full max-w-2xl lg:max-w-none">
-                            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-100 aspect-video bg-gray-100">
-                                <Image
-                                    src={data?.featured_projects?.[0]?.cover_image || "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2940&auto=format&fit=crop"}
-                                    alt="Hero Building"
-                                    width={1200}
-                                    height={675}
-                                    className="w-full h-full object-cover"
-                                    priority
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            {/* Hero Banner Section */}
+            <HeroBanner
+                locationCode="homepage_hero"
+                data={{
+                    title: "Công Ty Xây Dựng",
+                    subtitle: "Uy Tín & Chất Lượng",
+                    description: defaultHero.subtitle,
+                    image: data?.featured_projects?.[0]?.cover_image || "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2940&auto=format&fit=crop",
+                    button_text: defaultHero.ctaText,
+                    link: defaultHero.ctaLink,
+                    link_target: "_self",
+                }}
+                containerClass="mb-0"
+            />
 
             {/* About Sections (displayed as Features/Cards) */}
             {data?.about_sections && data.about_sections.length > 0 && (
