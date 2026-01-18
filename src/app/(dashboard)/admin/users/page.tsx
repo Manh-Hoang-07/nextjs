@@ -1,18 +1,23 @@
-"use client";
+import { Metadata } from "next";
+import UsersClient from "./UsersClient";
+import PageMeta from "@/components/ui/PageMeta";
 
-import dynamic from "next/dynamic";
-
-const AdminUsers = dynamic(() => import("@/components/admin/Users/AdminUsers"), {
-  ssr: false,
-  loading: () => <div>Đang tải...</div>,
-});
+export const metadata: Metadata = {
+  title: "Quản lý thành viên | Admin",
+  description: "Quản lý danh sách người dùng và phân quyền",
+};
 
 export default function AdminUsersPage() {
   return (
-    <div className="container mx-auto p-4">
-      <AdminUsers />
-    </div>
+    <>
+      <PageMeta
+        title="Quản lý thành viên"
+        breadcrumbs={[
+          { label: "Trang quản trị", href: "/admin" },
+          { label: "Thành viên", href: "/admin/users" },
+        ]}
+      />
+      <UsersClient />
+    </>
   );
 }
-
-

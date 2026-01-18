@@ -1,8 +1,86 @@
 "use client";
 
+// Force hydrate update
 import { useAuthStore } from "@/lib/store/authStore";
-import { useState, useRef, useEffect } from "react";
+import { usePageStore } from "@/lib/store/pageStore";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const PATH_MAP: Record<string, string> = {
+  admin: "Trang quản trị",
+  dashboard: "Tổng quan",
+  users: "Thành viên",
+  posts: "Bài viết",
+  "system-configs": "Cấu hình hệ thống",
+  general: "Cấu hình chung",
+  email: "Cấu hình Email",
+  roles: "Phân quyền",
+  permissions: "Quyền hạn",
+  products: "Sản phẩm",
+  orders: "Đơn hàng",
+  categories: "Danh mục",
+  profile: "Hồ sơ cá nhân",
+};
+
+function Breadcrumbs() {
+  const pathname = usePathname();
+  const { title: pageTitle, breadcrumbs: pageBreadcrumbs } = usePageStore();
+
+  const crumbs = useMemo(() => {
+    // Priority: Page declared breadcrumbs
+    if (pageBreadcrumbs && pageBreadcrumbs.length > 0) {
+      return pageBreadcrumbs.map((crumb, index) => ({
+        href: crumb.href,
+        label: crumb.label,
+        isLast: index === pageBreadcrumbs.length - 1
+      }));
+    }
+
+    if (!pathname) return [];
+
+    // Fallback: Auto generated from path
+    const path = pathname.split("?")[0];
+    const segments = path.split("/").filter(Boolean);
+
+    // Build crumbs
+    const items = segments.map((segment, index) => {
+      const href = "/" + segments.slice(0, index + 1).join("/");
+      const label = PATH_MAP[segment] || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
+      return { href, label, isLast: index === segments.length - 1 };
+    });
+
+    return items;
+  }, [pathname, pageBreadcrumbs]);
+
+  // Keep showing title if available, or at least 1 crumb
+  if (crumbs.length === 0 && !pageTitle) return null;
+
+  return (
+    <div className="hidden md:flex items-center gap-2 overflow-hidden whitespace-nowrap">
+      {crumbs.map((crumb, index) => (
+        <div key={index} className="flex items-center gap-2 text-sm">
+          {index > 0 && (
+            <svg className="h-3 w-3 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          )}
+          {crumb.href && !crumb.isLast ? (
+            <Link href={crumb.href} className="font-medium text-gray-500 hover:text-blue-600 transition-colors">
+              {crumb.label}
+            </Link>
+          ) : (
+            <span
+              className={`font-medium ${crumb.isLast ? "text-gray-900" : "text-gray-500"}`}
+            >
+              {crumb.label}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const { user, logout } = useAuthStore();
@@ -33,13 +111,7 @@ export function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () => void 
           </svg>
         </button>
 
-        <div className="hidden md:flex items-center gap-2">
-          <span className="text-gray-400 text-sm">Trang quản trị</span>
-          <svg className="h-3 w-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="font-medium text-gray-700 text-sm">Tổng quan</span>
-        </div>
+        <Breadcrumbs />
       </div>
 
       <div className="flex items-center gap-4">

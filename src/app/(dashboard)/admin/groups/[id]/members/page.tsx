@@ -1,16 +1,25 @@
-"use client";
+import { Metadata } from "next";
+import PageMeta from "@/components/ui/PageMeta";
+import AdminGroupMembersClient from "./GroupMembersClient";
 
-import { useParams } from "next/navigation";
-import GroupMembers from "@/components/admin/Groups/GroupMembers";
+export const metadata: Metadata = {
+  title: "Thành viên nhóm | Admin",
+  description: "Quản lý thành viên trong nhóm",
+};
 
 export default function AdminGroupMembersPage() {
-  const params = useParams();
-  const groupId = Number(params.id);
-
   return (
-    <div className="container mx-auto p-4">
-      <GroupMembers groupId={groupId} />
-    </div>
+    <>
+      <PageMeta
+        title="Thành viên nhóm"
+        breadcrumbs={[
+          { label: "Trang quản trị", href: "/admin", },
+          { label: "Nhóm & Context", href: "/admin/groups" },
+          { label: "Nhóm", href: "/admin/groups" },
+          { label: "Thành viên" },
+        ]}
+      />
+      <AdminGroupMembersClient />
+    </>
   );
 }
-

@@ -1,5 +1,12 @@
+import { Metadata } from "next";
 import SystemConfigForm from "@/components/admin/SystemConfigs/SystemConfigForm";
 import ContactChannelsManager from "@/components/admin/SystemConfigs/ContactChannelsManager";
+import PageMeta from "@/components/ui/PageMeta";
+
+export const metadata: Metadata = {
+  title: "Cấu hình chung | Admin",
+  description: "Quản lý thông tin chung của hệ thống",
+};
 
 export default function AdminSystemConfigGeneralPage() {
   const fields: any[] = [
@@ -33,7 +40,15 @@ export default function AdminSystemConfigGeneralPage() {
   ];
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
+    <div className="w-full p-4">
+      <PageMeta
+        title="Cấu hình chung"
+        breadcrumbs={[
+          { label: "Trang quản trị", href: "/admin", },
+          { label: "Cấu hình hệ thống" },
+          { label: "Cấu hình chung" },
+        ]}
+      />
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Cấu hình chung</h1>
         <p className="text-gray-500 mt-2">Quản lý thông tin cơ bản và SEO của website</p>

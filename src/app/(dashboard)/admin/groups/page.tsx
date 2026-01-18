@@ -1,9 +1,24 @@
 import { Suspense } from "react";
+import { Metadata } from "next";
 import AdminGroups from "@/components/admin/Groups/AdminGroups";
+import PageMeta from "@/components/ui/PageMeta";
+
+export const metadata: Metadata = {
+  title: "Quản lý Nhóm | Admin",
+  description: "Quản lý nhóm người dùng",
+};
 
 export default function AdminGroupsPage() {
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full p-4">
+      <PageMeta
+        title="Quản lý Nhóm"
+        breadcrumbs={[
+          { label: "Trang quản trị", href: "/admin", },
+          { label: "Nhóm & Context", href: "/admin/groups" },
+          { label: "Nhóm" },
+        ]}
+      />
       <Suspense fallback={<div>Đang tải...</div>}>
         <AdminGroups />
       </Suspense>

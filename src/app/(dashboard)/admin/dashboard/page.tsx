@@ -1,8 +1,23 @@
+import { Metadata } from "next";
+import PageMeta from "@/components/ui/PageMeta";
+
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Dashboard | Admin",
+  description: "Tổng quan hệ thống",
+};
 
 export default function AdminDashboardPage() {
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full p-4">
+      <PageMeta
+        title="Bảng điều khiển"
+        breadcrumbs={[
+          { label: "Trang quản trị", href: "/admin" },
+          { label: "Tổng quan" },
+        ]}
+      />
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600">Tổng quan về hoạt động của hệ thống</p>

@@ -1,9 +1,23 @@
 import { Suspense } from "react";
+import { Metadata } from "next";
 import AdminFAQs from "@/components/admin/FAQs/AdminFAQs";
+import PageMeta from "@/components/ui/PageMeta";
+
+export const metadata: Metadata = {
+  title: "Quản lý FAQ | Admin",
+  description: "Quản lý câu hỏi thường gặp",
+};
 
 export default function AdminFAQsPage() {
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full p-4">
+      <PageMeta
+        title="Quản lý FAQ"
+        breadcrumbs={[
+          { label: "Trang quản trị", href: "/admin", },
+          { label: "FAQ" },
+        ]}
+      />
       <Suspense fallback={<div>Đang tải...</div>}>
         <AdminFAQs />
       </Suspense>

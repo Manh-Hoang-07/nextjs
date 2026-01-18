@@ -7,6 +7,7 @@ import { FaqAccordion } from "@/components/home/FaqAccordion";
 import Image from "next/image";
 import { getSystemConfig } from "@/lib/api/public";
 import { Metadata } from "next";
+import PageMeta from "@/components/ui/PageMeta";
 
 export async function generateMetadata(): Promise<Metadata> {
     const systemConfig = await getSystemConfig("general");
@@ -26,7 +27,6 @@ export async function generateMetadata(): Promise<Metadata> {
         },
     };
 }
-
 
 // Helper to parse JSON string if needed (for images array)
 const parseImages = (images: string | string[]): string[] => {
@@ -59,6 +59,13 @@ export default async function LandingPage() {
 
     return (
         <div className="flex flex-col min-h-screen">
+            <PageMeta
+                title="Trang chủ"
+                breadcrumbs={[
+                    { label: "Trang chủ" }
+                ]}
+            />
+
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-background pt-32 md:pt-40 lg:pt-48 pb-20">
                 <div className="absolute top-0 left-0 -z-10 h-full w-full bg-white">

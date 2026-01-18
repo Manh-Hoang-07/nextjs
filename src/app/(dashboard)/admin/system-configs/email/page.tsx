@@ -1,4 +1,10 @@
+import { Metadata } from "next";
 import SystemConfigForm from "@/components/admin/SystemConfigs/SystemConfigForm";
+
+export const metadata: Metadata = {
+  title: "Cấu hình Email | Admin",
+  description: "Cấu hình SMTP gửi email",
+};
 
 export default function AdminSystemConfigEmailPage() {
   const fields: any[] = [
@@ -13,7 +19,7 @@ export default function AdminSystemConfigEmailPage() {
   ];
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
+    <div className="w-full p-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Cấu hình Email</h1>
         <p className="text-gray-500 mt-2">Cấu hình SMTP để gửi email thông báo từ hệ thống</p>
