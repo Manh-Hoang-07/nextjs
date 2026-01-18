@@ -1,0 +1,121 @@
+import { AxiosError } from "axios";
+
+export interface Project {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  short_description: string;
+  cover_image: string | null;
+  location: string;
+  status: string;
+  client_name: string;
+  images: string | string[];
+  featured: boolean;
+}
+
+export interface AboutSection {
+  id: string;
+  title: string;
+  slug?: string;
+  content: string;
+  image: string | null;
+  section_type?: string;
+  status?: string;
+  sort_order: number;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  position: string;
+  department?: string;
+  bio: string;
+  avatar: string;
+  email?: string;
+  phone?: string;
+  experience?: number;
+  expertise?: string;
+}
+
+export interface Partner {
+  id: string;
+  name: string;
+  logo: string;
+  website: string;
+  description: string;
+  type: string;
+}
+
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export interface SystemConfig {
+  site_name?: string;
+  site_description?: string;
+  site_logo?: string | null;
+  site_email?: string | null;
+  site_phone?: string | null;
+  site_address?: string | null;
+  site_copyright?: string | null;
+  contact_channels?: any;
+  timezone?: string;
+  [key: string]: any;
+}
+
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
+
+export interface RetryConfig {
+  delay: number;
+  attempts: number;
+  backoff?: 'linear' | 'exponential';
+  maxDelay?: number;
+  retryCondition?: (error: AxiosError) => boolean;
+}
+
+export interface CacheItem<T = any> {
+  data: T;
+  timestamp: number;
+  ttl: number;
+}
+
+export interface EnhancedError extends AxiosError {
+  method?: string;
+  url?: string;
+  timestamp?: string;
+  userMessage?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface Post {
+  id: string;
+  name: string;
+  slug: string;
+  excerpt: string;
+  description?: string;
+  content: string;
+  cover_image: string | null;
+  image?: string | null;
+  view_count: number;
+  primary_category?: Category;
+  tags?: Tag[];
+  created_at?: string;
+  author?: {
+    name: string;
+    avatar?: string;
+  };
+}

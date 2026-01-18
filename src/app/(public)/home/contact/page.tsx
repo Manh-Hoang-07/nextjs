@@ -1,0 +1,220 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import FormField from "@/components/ui/FormField";
+import { PageBanner } from "@/components/ui/PageBanner";
+
+export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Simulate API call
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setSubmitStatus("success");
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+      });
+    } catch (error) {
+      setSubmitStatus("error");
+    } finally {
+      setIsSubmitting(false);
+
+      // Reset status after 5 seconds
+      setTimeout(() => {
+        setSubmitStatus("idle");
+      }, 5000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <PageBanner
+        title="Liên Hệ Với Chúng Tôi"
+        subtitle="Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn"
+        backgroundImage="https://images.unsplash.com/photo-1423666639041-f142fcb9337f?auto=format&fit=crop&q=80"
+      />
+
+      <div className="container mx-auto px-4 -mt-10 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Contact Info Cards */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Address */}
+            <div className="bg-white rounded-xl shadow-lg p-6 transform transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Địa chỉ</h3>
+              <p className="text-gray-600">
+                Tầng 12, Tòa nhà Bitexco<br />
+                Số 2 Hải Triều, Quận 1<br />
+                TP. Hồ Chí Minh, Việt Nam
+              </p>
+            </div>
+
+            {/* Email */}
+            <div className="bg-white rounded-xl shadow-lg p-6 transform transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Email</h3>
+              <p className="text-gray-600">tuyendung@vinahire.vn</p>
+              <p className="text-gray-600">contact@vinahire.vn</p>
+            </div>
+
+            {/* Phone */}
+            <div className="bg-white rounded-xl shadow-lg p-6 transform transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Điện thoại</h3>
+              <p className="text-gray-600">Hotline: 1900 1234</p>
+              <p className="text-gray-600">Mobile: 090 123 4567</p>
+            </div>
+          </div>
+
+          {/* Contact Form */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-lg p-8 h-full">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b pb-4">Gửi tin nhắn cho chúng tôi</h2>
+
+              {submitStatus === "success" && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.</span>
+                </div>
+              )}
+
+              {submitStatus === "error" && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Có lỗi xảy ra. Vui lòng thử lại sau.</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    id="name"
+                    name="name"
+                    type="text"
+                    label="Họ và tên"
+                    placeholder="Nhập họ tên của bạn"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <FormField
+                    id="email"
+                    name="email"
+                    type="email"
+                    label="Email"
+                    placeholder="example@email.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    label="Số điện thoại"
+                    placeholder="090 123 4567"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+
+                  <FormField
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    label="Chủ đề"
+                    placeholder="Bạn quan tâm đến dịch vụ nào?"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <FormField
+                  id="message"
+                  name="message"
+                  type="textarea"
+                  label="Nội dung tin nhắn"
+                  placeholder="Mô tả chi tiết yêu cầu của bạn..."
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
+                  rows={5}
+                />
+
+                <div className="pt-4">
+                  <Button
+                    type="submit"
+                    className="w-full md:w-auto px-8"
+                    isLoading={isSubmitting}
+                  >
+                    Gửi tin nhắn
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Map Section */}
+        <div className="mt-16 bg-white rounded-xl shadow-lg overflow-hidden h-96">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.5132741062075!2d106.70113917480506!3d10.771961989377488!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f40a3b49e59%3A0xa1bd14565e63e419!2sBitexco%20Financial%20Tower!5e0!3m2!1sen!2s!4v1710567890123!5m2!1sen!2s"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  );
+}

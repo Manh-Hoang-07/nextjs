@@ -1,0 +1,110 @@
+import { getAboutSections, getStaffList } from "@/lib/api/public";
+import { AboutSection, TeamMember } from "@/types/api";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import Image from "next/image";
+
+export default async function AboutPage() {
+  const [aboutSections, allStaff] = await Promise.all([
+    getAboutSections(),
+    getStaffList()
+  ]);
+
+  const teamMembers = allStaff.slice(0, 3);
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Về chúng tôi</h1>
+
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-8 mb-12 text-white">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl font-bold mb-4">Chào mừng đến với công ty của chúng tôi</h2>
+          <p className="text-lg">
+            Chúng tôi là đội ngũ chuyên gia tận tâm, cam kết mang đến những giải pháp thực tế
+            và chất lượng vượt trội.
+          </p>
+        </div>
+      </div>
+
+      {/* About Sections */}
+      <div className="space-y-12 mb-16">
+        {aboutSections.length > 0 ? (
+          aboutSections.map((section: AboutSection, index: number) => (
+            <div key={section.id} className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-8`}>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">{section.title}</h3>
+                <div
+                  className="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: section.content }}
+                />
+              </div>
+              <div className="flex-1">
+                {section.image && (
+                  <div className="rounded-lg overflow-hidden shadow-lg border border-gray-100">
+                    <Image
+                      src={section.image}
+                      alt={section.title}
+                      width={800}
+                      height={400}
+                      className="w-full h-64 object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500">Thông tin giới thiệu đang được cập nhật...</p>
+        )}
+      </div>
+
+      {/* Team Section */}
+      <div className="mb-16">
+        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Đội ngũ của chúng tôi</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {teamMembers.map((member: TeamMember) => (
+            <div key={member.id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 group">
+              <div className="h-64 bg-gray-50 flex items-center justify-center overflow-hidden">
+                {member.avatar ? (
+                  <Image
+                    src={member.avatar}
+                    alt={member.name}
+                    width={400}
+                    height={400}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-primary">
+                      {member.name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
+                <p className="text-primary font-medium mb-3">{member.position}</p>
+                <p className="text-gray-600 mb-4 line-clamp-3">{member.bio}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-gray-50 rounded-xl p-10 text-center border border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Gia nhập đội ngũ của chúng tôi</h2>
+        <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+          Chúng tôi luôn tìm kiếm những tài năng mới để cùng nhau phát triển.
+          Nếu bạn đam mê và muốn tạo ra sự khác biệt, hãy liên hệ với chúng tôi.
+        </p>
+        <Link href="/home/contact">
+          <Button size="lg">
+            Liên hệ ngay
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
