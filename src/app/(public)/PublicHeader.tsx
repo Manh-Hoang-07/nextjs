@@ -31,14 +31,30 @@ export function PublicHeader({
 }: PublicHeaderProps) {
   const [expandedMobileMenus, setExpandedMobileMenus] = useState<string[]>([]);
   const [scrolled, setScrolled] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState({ name: "User" });
+  const [internalMobileMenuOpen, setInternalMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Sync scroll lock with menu state
+  useEffect(() => {
+    if (internalMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [internalMobileMenuOpen]);
+
+  // Handle pathname changes (auto-close menu)
+  useEffect(() => {
+    setInternalMobileMenuOpen(false);
+  }, [pathname]);
 
   const siteName = systemConfig?.site_name || "Công Ty Xây Dựng";
 
@@ -97,8 +113,6 @@ export function PublicHeader({
   };
 
   const isTransparentPage =
-    pathname === "/" ||
-    pathname === "/en" ||
     pathname?.startsWith("/home/services") ||
     pathname?.startsWith("/home/projects") ||
     pathname?.startsWith("/home/posts") ||
@@ -108,22 +122,42 @@ export function PublicHeader({
     ? (scrolled ? "bg-white/80 backdrop-blur-md shadow-sm" : "bg-transparent")
     : "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100";
 
+  const handleToggle = () => {
+    setInternalMobileMenuOpen(!internalMobileMenuOpen);
+    onToggleMobileMenu();
+  };
+
+  const handleClose = () => {
+    setInternalMobileMenuOpen(false);
+    onCloseMobileMenu();
+  };
+
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${headerClass} text-gray-900`}
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${headerClass}`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo area */}
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg transform transition-transform hover:scale-105`}>
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <Link href="/" className={`text-xl font-bold tracking-tight ${scrolled ? 'text-gray-900' : 'text-gray-900 lg:text-gray-900'}`}>
-                {siteName}
+              <Link href="/" className="flex items-center gap-3 group">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 overflow-hidden`}>
+                  {systemConfig?.site_logo ? (
+                    <img
+                      src={systemConfig.site_logo}
+                      alt={siteName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  )}
+                </div>
+                <span className={`text-xl font-bold tracking-tight ${(scrolled || !isTransparentPage) ? 'text-gray-900' : 'text-white'}`}>
+                  {siteName}
+                </span>
               </Link>
             </div>
 
@@ -132,7 +166,11 @@ export function PublicHeader({
               {navigationItems.map((item) => (
                 <div key={item.name} className="relative group px-1">
                   {item.children ? (
-                    <button className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive(item.path) ? "bg-primary/10 text-primary" : "text-gray-700 hover:text-primary hover:bg-gray-50"
+                    <button className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive(item.path)
+                      ? "bg-primary/10 text-primary"
+                      : (scrolled || !isTransparentPage)
+                        ? "text-gray-700 hover:text-primary hover:bg-gray-50"
+                        : "text-white/90 hover:text-white hover:bg-white/10"
                       }`}>
                       {item.name}
                       <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform duration-200" />
@@ -140,7 +178,11 @@ export function PublicHeader({
                   ) : (
                     <Link
                       href={item.path}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive(item.path) ? "bg-primary/10 text-primary" : "text-gray-700 hover:text-primary hover:bg-gray-50"
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive(item.path)
+                        ? "bg-primary/10 text-primary"
+                        : (scrolled || !isTransparentPage)
+                          ? "text-gray-700 hover:text-primary hover:bg-gray-50"
+                          : "text-white/90 hover:text-white hover:bg-white/10"
                         }`}
                     >
                       {item.name}
@@ -178,10 +220,11 @@ export function PublicHeader({
               </Link>
 
               <button
-                className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                onClick={onToggleMobileMenu}
+                className={`lg:hidden p-3 rounded-xl transition-all active:scale-95 z-[70] ${(scrolled || !isTransparentPage) ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}
+                onClick={handleToggle}
+                aria-label="Toggle menu"
               >
-                <Bars3Icon className="w-6 h-6" />
+                <Bars3Icon className="w-7 h-7" />
               </button>
             </div>
           </div>
@@ -189,20 +232,21 @@ export function PublicHeader({
       </header>
 
       {/* Mobile Menu Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300 lg:hidden ${mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        onClick={onCloseMobileMenu}
-      />
+      {internalMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-[80] backdrop-blur-sm lg:hidden transition-all duration-300"
+          onClick={handleClose}
+        />
+      )}
 
       {/* Mobile Menu Sidebar */}
-      <div className={`fixed inset-y-0 right-0 w-[300px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 lg:hidden ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+      <div className={`fixed inset-y-0 right-0 w-[300px] bg-white z-[90] shadow-2xl transform transition-transform duration-300 ease-in-out lg:hidden ${internalMobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}>
         <div className="flex flex-col h-full">
           <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-            <span className="font-bold text-lg">Menu</span>
+            <span className="font-bold text-lg text-gray-900">Danh mục</span>
             <button
-              onClick={onCloseMobileMenu}
+              onClick={handleClose}
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <XMarkIcon className="w-6 h-6" />
@@ -239,7 +283,7 @@ export function PublicHeader({
                           <Link
                             key={child.path}
                             href={child.path}
-                            onClick={onCloseMobileMenu}
+                            onClick={handleClose}
                             className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${pathname === child.path
                               ? "text-primary bg-primary/5"
                               : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -253,7 +297,7 @@ export function PublicHeader({
                   ) : (
                     <Link
                       href={item.path}
-                      onClick={onCloseMobileMenu}
+                      onClick={handleClose}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive(item.path) ? "bg-primary/5 text-primary" : "text-gray-700 hover:bg-gray-50"
                         }`}
                     >
@@ -267,7 +311,7 @@ export function PublicHeader({
           </div>
 
           <div className="p-5 border-t border-gray-100">
-            <Link href="/home/contact" onClick={onCloseMobileMenu}>
+            <Link href="/home/contact" onClick={handleClose}>
               <button className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-medium shadow-lg shadow-primary/25 active:scale-95 transition-all">
                 <PhoneIcon className="w-5 h-5" />
                 <span>Liên hệ ngay</span>

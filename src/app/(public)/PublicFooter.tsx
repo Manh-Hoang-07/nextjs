@@ -63,11 +63,18 @@ export function PublicFooter({ systemConfig }: PublicFooterProps) {
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
-              {/* Logo từ API hoặc fallback icon */}
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                </svg>
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3 overflow-hidden">
+                {systemConfig?.site_logo ? (
+                  <img
+                    src={systemConfig.site_logo}
+                    alt={systemInfo.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                  </svg>
+                )}
               </div>
               <h3 className="text-lg font-semibold">{systemInfo.name}</h3>
             </div>

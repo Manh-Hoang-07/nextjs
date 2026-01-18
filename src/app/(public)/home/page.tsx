@@ -1,10 +1,10 @@
 import HomePageContent from "@/components/home/HomePageContent";
-import { constructMetadata } from "@/lib/metadata";
+import { Metadata } from "next";
 
-export const metadata = constructMetadata({
+export const metadata: Metadata = {
   title: "Trang chủ",
-  description: "Khám phá hàng ngàn truyện tranh hay nhất, mới nhất. Đọc truyện tranh online miễn phí.",
-});
+  description: "Chào mừng bạn đến với trang chủ của chúng tôi. Khám phá các dự án và dịch vụ tiêu biểu.",
+};
 
 export default function PublicHomePage() {
   return <HomePageContent />;

@@ -5,6 +5,28 @@ import { publicEndpoints } from "@/lib/api/endpoints";
 import { Post } from "@/types/api";
 import { notFound } from "next/navigation";
 import { ShareButton } from "@/components/ui/ShareButton";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
+
+  if (!post) {
+    return {
+      title: "Bài viết không tồn tại",
+    };
+  }
+
+  return {
+    title: post.name,
+    description: post.excerpt,
+    openGraph: {
+      title: post.name,
+      description: post.excerpt,
+      images: post.cover_image ? [{ url: post.cover_image }] : [],
+    },
+  };
+}
 
 export async function generateStaticParams() {
   const { data: posts } = await serverFetch<Post[]>(publicEndpoints.posts.list, {

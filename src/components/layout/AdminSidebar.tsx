@@ -78,7 +78,7 @@ function MenuItem({ item, pathname, depth = 0 }: { item: MenuTreeItem; pathname:
   );
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
   const { getUserMenus, loading: menusLoading } = useMenus();
   const { user, logout } = useAuthStore();
@@ -87,6 +87,12 @@ export function AdminSidebar() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+
+  // Close sidebar on path change
+  useEffect(() => {
+    if (onClose) onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Initialize groups and menus
   useEffect(() => {
@@ -126,8 +132,9 @@ export function AdminSidebar() {
   }, [groups, getUserMenus]);
 
   return (
-    <aside className="hidden w-64 border-r border-gray-200 bg-white md:flex flex-col h-screen sticky top-0 bg-white">
-      <div className="h-16 flex items-center px-6 border-b border-gray-100 shrink-0">
+    <aside className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-gray-200 bg-white transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col h-screen shrink-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+      <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100 shrink-0">
         <Link href="/admin" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,6 +145,16 @@ export function AdminSidebar() {
             Admin Panel
           </span>
         </Link>
+
+        {/* Close button for mobile */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Group Selector */}

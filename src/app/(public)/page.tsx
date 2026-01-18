@@ -5,6 +5,28 @@ import { StaffCarousel } from "@/components/home/StaffCarousel";
 import { PartnerCarousel } from "@/components/home/PartnerCarousel";
 import { FaqAccordion } from "@/components/home/FaqAccordion";
 import Image from "next/image";
+import { getSystemConfig } from "@/lib/api/public";
+import { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+    const systemConfig = await getSystemConfig("general");
+    const siteName = systemConfig?.site_name || "Công Ty Xây Dựng";
+    const siteDescription = systemConfig?.site_description || "";
+
+    return {
+        title: {
+            absolute: systemConfig?.meta_title || siteName,
+        },
+        description: systemConfig?.site_description || siteDescription,
+        keywords: systemConfig?.meta_keywords || "",
+        openGraph: {
+            title: systemConfig?.og_title || siteName,
+            description: systemConfig?.og_description || siteDescription,
+            images: systemConfig?.og_image ? [{ url: systemConfig.og_image }] : [],
+        },
+    };
+}
+
 
 // Helper to parse JSON string if needed (for images array)
 const parseImages = (images: string | string[]): string[] => {

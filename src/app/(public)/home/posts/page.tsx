@@ -4,6 +4,12 @@ import { publicEndpoints } from "@/lib/api/endpoints";
 import { PostList } from "@/components/posts/PostList";
 
 import { serverFetch } from "@/lib/api/server-client";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tin tức",
+  description: "Cập nhật những thông tin mới nhất về ngành xây dựng, kiến trúc và hoạt động của công ty.",
+};
 
 async function getPostsData() {
   const [postsRes, catsRes] = await Promise.all([

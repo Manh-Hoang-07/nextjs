@@ -2,6 +2,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { PageBanner } from "@/components/ui/PageBanner";
 import { ServiceFilter } from "@/components/services/ServiceFilter";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dịch vụ",
+  description: "Giải pháp công nghệ toàn diện giúp doanh nghiệp phát triển bền vững.",
+};
 
 interface Service {
   id: string;

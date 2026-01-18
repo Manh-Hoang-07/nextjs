@@ -16,16 +16,36 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: process.env.NEXT_PUBLIC_SITE_NAME || "Giới thiệu",
-    template: `%s | ${process.env.NEXT_PUBLIC_SITE_NAME || "Giới thiệu"}`,
-  },
-  description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || "",
-  metadataBase: process.env.NEXT_PUBLIC_SITE_URL
-    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-    : undefined,
-};
+import { getSystemConfig } from "@/lib/api/public";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const systemConfig = await getSystemConfig("general");
+  const siteName = systemConfig?.site_name || process.env.NEXT_PUBLIC_SITE_NAME || "Shop Online";
+  const siteDescription = systemConfig?.site_description || process.env.NEXT_PUBLIC_SITE_DESCRIPTION || "";
+  const favicon = systemConfig?.site_favicon;
+
+  return {
+    title: {
+      default: siteName,
+      template: `%s | ${siteName}`,
+    },
+    description: siteDescription,
+    keywords: systemConfig?.meta_keywords || "",
+    icons: {
+      icon: favicon || "/favicon.ico",
+      shortcut: favicon || "/favicon.ico",
+      apple: favicon || "/favicon.ico",
+    },
+    openGraph: {
+      title: systemConfig?.og_title || siteName,
+      description: systemConfig?.og_description || siteDescription,
+      images: systemConfig?.og_image ? [{ url: systemConfig.og_image }] : [],
+    },
+    metadataBase: process.env.NEXT_PUBLIC_SITE_URL
+      ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+      : undefined,
+  };
+}
 
 export default function RootLayout({
   children,

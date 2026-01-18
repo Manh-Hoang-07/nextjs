@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Câu hỏi thường gặp",
+  description: "Tìm câu trả lời cho các câu hỏi phổ biến về dịch vụ của chúng tôi.",
+};
 import api from "@/lib/api/client";
 import { publicEndpoints } from "@/lib/api/endpoints";
 

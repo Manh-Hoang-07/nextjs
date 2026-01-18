@@ -4,6 +4,12 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Thư viện dự án",
+  description: "Khám phá các thiết kế và giải pháp xây dựng tiêu biểu của chúng tôi.",
+};
 import api from "@/lib/api/client";
 import { publicEndpoints } from "@/lib/api/endpoints";
 

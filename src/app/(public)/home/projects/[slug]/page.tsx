@@ -5,6 +5,28 @@ import { serverFetch } from "@/lib/api/server-client";
 import { publicEndpoints } from "@/lib/api/endpoints";
 import { Project } from "@/types/api";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const project = await getProject(slug);
+
+  if (!project) {
+    return {
+      title: "Dự án không tồn tại",
+    };
+  }
+
+  return {
+    title: project.name,
+    description: project.short_description,
+    openGraph: {
+      title: project.name,
+      description: project.short_description,
+      images: project.cover_image ? [{ url: project.cover_image }] : [],
+    },
+  };
+}
 
 // Tự động tạo static paths cho các dự án khi build
 export async function generateStaticParams() {

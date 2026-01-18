@@ -4,7 +4,7 @@ import { useAuthStore } from "@/lib/store/authStore";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
-export function AdminHeader() {
+export function AdminHeader({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const { user, logout } = useAuthStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -20,9 +20,19 @@ export function AdminHeader() {
   }, []);
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">
+    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
       <div className="flex items-center gap-4">
-        {/* Mobile menu toggle could be here */}
+        {/* Mobile menu toggle */}
+        <button
+          onClick={onToggleSidebar}
+          className="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
         <div className="hidden md:flex items-center gap-2">
           <span className="text-gray-400 text-sm">Trang quản trị</span>
           <svg className="h-3 w-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">

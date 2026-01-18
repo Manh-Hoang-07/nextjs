@@ -51,7 +51,7 @@ export default function AdminLayout({
     <div className="admin-layout flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Sidebar */}
       <AdminSidebar
-        isOpen={isMounted && sidebarOpen && !isMobile}
+        isOpen={isMounted && sidebarOpen}
         onClose={closeSidebar}
         currentPath={pathname}
       />
@@ -71,7 +71,7 @@ export default function AdminLayout({
       >
         <AdminHeader
           onToggleSidebar={toggleSidebar}
-          sidebarOpen={isMounted && sidebarOpen && !isMobile}
+          sidebarOpen={isMounted && sidebarOpen}
           currentPath={pathname}
         />
         <main className="flex-1 min-w-0 pt-16">{children}</main>

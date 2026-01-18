@@ -1,6 +1,25 @@
 import Link from "next/link";
 import { PageBanner } from "@/components/ui/PageBanner";
 import { Button } from "@/components/ui/Button";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const service = MOCK_SERVICES.find(s => s.id === id);
+    const title = service?.title || "Dịch vụ chi tiết";
+    const description = service?.description || "Chi tiết dịch vụ của chúng tôi.";
+
+    return {
+        title: title,
+        description: description,
+        openGraph: {
+            title: title,
+            description: description,
+            images: service?.image ? [{ url: service.image }] : [],
+        },
+    };
+}
+
 
 // Mock data (shared with list page for consistency)
 const MOCK_SERVICES = [

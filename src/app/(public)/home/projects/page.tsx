@@ -5,6 +5,12 @@ import { ProjectFilter } from "@/components/projects/ProjectFilter";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Suspense } from "react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dự án",
+  description: "Khám phá những công trình tiêu biểu chúng tôi đã thực hiện.",
+};
 
 // Enable ISR with 5 minutes revalidation
 export const revalidate = 300;

@@ -57,12 +57,19 @@ export interface SystemConfig {
   site_name?: string;
   site_description?: string;
   site_logo?: string | null;
+  site_favicon?: string | null;
   site_email?: string | null;
   site_phone?: string | null;
   site_address?: string | null;
   site_copyright?: string | null;
   contact_channels?: any;
   timezone?: string;
+  meta_title?: string | null;
+  meta_keywords?: string | null;
+  og_title?: string | null;
+  og_description?: string | null;
+  og_image?: string | null;
+  canonical_url?: string | null;
   [key: string]: any;
 }
 

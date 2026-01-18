@@ -3,6 +3,12 @@ import { AboutSection, TeamMember } from "@/types/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Về chúng tôi",
+  description: "Tìm hiểu thêm về đội ngũ và giá trị cốt lõi của chúng tôi.",
+};
 
 export default async function AboutPage() {
   const [aboutSections, allStaff] = await Promise.all([
