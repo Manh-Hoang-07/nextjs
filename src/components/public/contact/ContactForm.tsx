@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import FormField from "@/components/ui/FormField";
+import { Button } from "@/components/ui/navigation/Button";
+import FormField from "@/components/ui/forms/FormField";
 
 export function ContactForm() {
     const [formData, setFormData] = useState({

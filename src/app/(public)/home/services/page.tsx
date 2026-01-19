@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { PageBanner } from "@/components/ui/PageBanner";
+import { Button } from "@/components/ui/navigation/Button";
+import { PageBanner } from "@/components/ui/navigation/PageBanner";
 import { ServiceFilter } from "@/components/public/services/ServiceFilter";
 import { Metadata } from "next";
 

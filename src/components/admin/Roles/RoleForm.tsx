@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import SearchableSelect from "@/components/ui/SearchableSelect";
-import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
-import MultipleSelect from "@/components/ui/MultipleSelect";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import SearchableSelect from "@/components/ui/forms/SearchableSelect";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
+import MultipleSelect from "@/components/ui/forms/MultipleSelect";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import api from "@/lib/api/client";
 

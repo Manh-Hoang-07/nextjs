@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import SelectFilter from "@/components/ui/SelectFilter";
+import SelectFilter from "@/components/ui/filters/SelectFilter";
 import AdminFilter from "@/components/admin/Filter/AdminFilter";
 
 interface PostsFilterProps {

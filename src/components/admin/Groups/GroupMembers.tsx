@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import { useToastContext } from "@/contexts/ToastContext";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
+import ConfirmModal from "@/components/ui/feedback/ConfirmModal";
 import AddMemberModal from "./AddMemberModal";
 import EditMemberRolesModal from "./EditMemberRolesModal";
 

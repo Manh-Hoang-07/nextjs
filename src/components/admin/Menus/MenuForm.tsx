@@ -4,10 +4,10 @@ import { useEffect, useMemo, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
-import SearchableSelect from "@/components/ui/SearchableSelect";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
+import SearchableSelect from "@/components/ui/forms/SearchableSelect";
 import { adminEndpoints } from "@/lib/api/endpoints";
 
 // 1. Define Menu Schema

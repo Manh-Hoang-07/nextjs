@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
 
 // 1. Define Warehouse Schema
 const warehouseSchema = z.object({

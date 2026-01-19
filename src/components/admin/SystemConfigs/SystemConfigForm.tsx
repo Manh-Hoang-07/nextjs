@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
-import FormField from "@/components/ui/FormField";
-import ImageUploader from "@/components/ui/ImageUploader";
+import FormField from "@/components/ui/forms/FormField";
+import ImageUploader from "@/components/ui/forms/ImageUploader";
 import { api } from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import { useToastContext } from "@/contexts/ToastContext";

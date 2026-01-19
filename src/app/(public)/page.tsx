@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/navigation/Button";
 import Link from "next/link";
 import { getHomepageData } from "@/lib/api/home";
 import { StaffCarousel } from "@/components/public/home/StaffCarousel";
@@ -7,7 +7,7 @@ import { FaqAccordion } from "@/components/public/home/FaqAccordion";
 import Image from "next/image";
 import { getSystemConfig } from "@/lib/api/public";
 import { Metadata } from "next";
-import PageMeta from "@/components/ui/PageMeta";
+import PageMeta from "@/components/ui/navigation/PageMeta";
 import HeroBanner from "@/components/public/banners/HeroBanner";
 
 export async function generateMetadata(): Promise<Metadata> {

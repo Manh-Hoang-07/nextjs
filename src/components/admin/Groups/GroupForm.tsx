@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
 import api from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
 

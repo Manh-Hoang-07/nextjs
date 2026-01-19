@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, ReactNode } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import TextFilter from "@/components/ui/TextFilter";
+import TextFilter from "@/components/ui/filters/TextFilter";
 
 interface SortOption {
   value: string;

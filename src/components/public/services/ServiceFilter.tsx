@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/Button";
-import FormField from "@/components/ui/FormField";
+import { Button } from "@/components/ui/navigation/Button";
+import FormField from "@/components/ui/forms/FormField";
 import Link from "next/link";
 
 interface Service {

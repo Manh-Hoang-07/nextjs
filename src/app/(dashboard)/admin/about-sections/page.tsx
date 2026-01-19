@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
 import AdminAboutSections from "@/components/admin/AboutSections/AdminAboutSections";
-import PageMeta from "@/components/ui/PageMeta";
+import PageMeta from "@/components/ui/navigation/PageMeta";
 
 export const metadata: Metadata = {
   title: "Giới thiệu chung | Admin",

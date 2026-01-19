@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import ConfirmModal from "@/components/ui/ConfirmModal";
-import Actions from "@/components/ui/Actions";
-import Pagination from "@/components/ui/Pagination";
+import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
+import ConfirmModal from "@/components/ui/feedback/ConfirmModal";
+import Actions from "@/components/ui/data-display/Actions";
+import Pagination from "@/components/ui/data-display/Pagination";
 import PartnersFilter from "./PartnersFilter";
 import CreatePartner from "./CreatePartner";
 import EditPartner from "./EditPartner";

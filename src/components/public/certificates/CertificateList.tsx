@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/Button";
-import Modal from "@/components/ui/Modal";
+import { Button } from "@/components/ui/navigation/Button";
+import Modal from "@/components/ui/feedback/Modal";
 
 interface Certificate {
     id: string;

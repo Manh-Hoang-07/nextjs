@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import ConfirmModal from "@/components/ui/ConfirmModal";
-import Actions from "@/components/ui/Actions";
-import Pagination from "@/components/ui/Pagination";
+import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
+import ConfirmModal from "@/components/ui/feedback/ConfirmModal";
+import Actions from "@/components/ui/data-display/Actions";
+import Pagination from "@/components/ui/data-display/Pagination";
 import ContextsFilter from "./ContextsFilter";
 import CreateContext from "./CreateContext";
 import EditContext from "./EditContext";

@@ -4,10 +4,10 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import ImageUploader from "@/components/ui/ImageUploader";
-import CKEditor from "@/components/ui/CKEditor";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import ImageUploader from "@/components/ui/forms/ImageUploader";
+import CKEditor from "@/components/ui/forms/CKEditor";
 import { userEndpoints } from "@/lib/api/endpoints";
 
 // 1. Define Project Schema

@@ -4,9 +4,9 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
 
 const contextSchema = z.object({
   type: z.string().min(1, "Loại context là bắt buộc").max(100, "Loại context tối đa 100 ký tự"),

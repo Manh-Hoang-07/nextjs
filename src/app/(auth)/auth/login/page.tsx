@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/Button";
-import FormField from "@/components/ui/FormField";
+import { Button } from "@/components/ui/navigation/Button";
+import FormField from "@/components/ui/forms/FormField";
 import { useAuthStore } from "@/lib/store/authStore";
 
 // 1. Khai báo schema validate (Declarative Validation)

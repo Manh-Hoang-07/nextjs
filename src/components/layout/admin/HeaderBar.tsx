@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import GroupSwitcher from "@/components/ui/GroupSwitcher";
+import GroupSwitcher from "@/components/ui/navigation/GroupSwitcher";
 import UserDropdown from "./UserDropdown";
 import { useAuthStore } from "@/lib/store/authStore";
 

@@ -3,11 +3,11 @@
 import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import ContactsFilter from "./ContactsFilter";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import Actions from "@/components/ui/Actions";
-import Pagination from "@/components/ui/Pagination";
+import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
+import Actions from "@/components/ui/data-display/Actions";
+import Pagination from "@/components/ui/data-display/Pagination";
 import { formatDate } from "@/utils";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import ConfirmModal from "@/components/ui/feedback/ConfirmModal";
 
 interface AdminContactsProps {
     title?: string;

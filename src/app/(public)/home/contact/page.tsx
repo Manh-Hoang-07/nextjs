@@ -1,4 +1,4 @@
-import { PageBanner } from "@/components/ui/PageBanner";
+import { PageBanner } from "@/components/ui/navigation/PageBanner";
 import { ContactForm } from "@/components/public/contact/ContactForm";
 import { Metadata } from "next";
 

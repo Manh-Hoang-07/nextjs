@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/Button";
-import FormField from "@/components/ui/FormField";
+import { Button } from "@/components/ui/navigation/Button";
+import FormField from "@/components/ui/forms/FormField";
 
 // 1. Define Change Password Schema
 const changePasswordSchema = z.object({
