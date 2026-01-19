@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { AdminSidebar } from "@/components/layout/AdminSidebar";
-import { AdminHeader } from "@/components/layout/AdminHeader";
+import { AdminSidebar } from "@/components/layout/admin/AdminSidebar";
+import { AdminHeader } from "@/components/layout/admin/AdminHeader";
 
 export function AdminLayoutClient({
     children,

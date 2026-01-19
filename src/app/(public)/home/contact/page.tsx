@@ -1,5 +1,5 @@
 import { PageBanner } from "@/components/ui/PageBanner";
-import { ContactForm } from "@/components/contact/ContactForm";
+import { ContactForm } from "@/components/public/contact/ContactForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

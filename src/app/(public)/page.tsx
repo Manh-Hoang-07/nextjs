@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { getHomepageData } from "@/lib/api/home";
-import { StaffCarousel } from "@/components/home/StaffCarousel";
-import { PartnerCarousel } from "@/components/home/PartnerCarousel";
-import { FaqAccordion } from "@/components/home/FaqAccordion";
+import { StaffCarousel } from "@/components/public/home/StaffCarousel";
+import { PartnerCarousel } from "@/components/public/home/PartnerCarousel";
+import { FaqAccordion } from "@/components/public/home/FaqAccordion";
 import Image from "next/image";
 import { getSystemConfig } from "@/lib/api/public";
 import { Metadata } from "next";

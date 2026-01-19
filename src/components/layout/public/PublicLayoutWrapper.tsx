@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, isValidElement } from "react";
 import { usePathname } from "next/navigation";
-import FloatingContactChannels from "@/components/layout/ContactChannels/FloatingContactChannels";
+import FloatingContactChannels from "@/components/layout/public/ContactChannels/FloatingContactChannels";
 
 interface PublicLayoutWrapperProps {
     children: React.ReactNode;

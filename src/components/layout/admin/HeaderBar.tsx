@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import GroupSwitcher from "@/components/ui/GroupSwitcher";
-import UserDropdown from "../Shared/UserDropdown";
+import UserDropdown from "./UserDropdown";
 import { useAuthStore } from "@/lib/store/authStore";
 
 interface HeaderBarProps {
@@ -31,9 +31,8 @@ export default function HeaderBar({
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 h-12 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-[1001] transition-all duration-300 ${
-        sidebarOpen ? "lg:left-64 lg:w-[calc(100%-256px)]" : ""
-      }`}
+      className={`fixed top-0 left-0 right-0 h-12 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-[1001] transition-all duration-300 ${sidebarOpen ? "lg:left-64 lg:w-[calc(100%-256px)]" : ""
+        }`}
     >
       <div className="flex items-center gap-3 flex-shrink-0">
         <button

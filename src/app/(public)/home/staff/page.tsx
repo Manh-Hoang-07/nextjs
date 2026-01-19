@@ -1,5 +1,5 @@
 import { getStaffList } from "@/lib/api/public";
-import { StaffList } from "@/components/staff/StaffList";
+import { StaffList } from "@/components/public/staff/StaffList";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";

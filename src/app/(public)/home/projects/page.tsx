@@ -1,7 +1,7 @@
 import { PageBanner } from "@/components/ui/PageBanner";
 import { serverFetch } from "@/lib/api/server-client";
 import { publicEndpoints } from "@/lib/api/endpoints";
-import { ProjectFilter } from "@/components/projects/ProjectFilter";
+import { ProjectFilter } from "@/components/public/projects/ProjectFilter";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Suspense } from "react";
