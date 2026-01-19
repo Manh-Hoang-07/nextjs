@@ -10,6 +10,7 @@ import {
   ChevronDownIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
+import Image from "next/image";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 
 import { SystemConfig } from "@/types/api";
@@ -142,12 +143,13 @@ export function PublicHeader({
             {/* Logo area */}
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-3 group">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 overflow-hidden`}>
+                <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 overflow-hidden`}>
                   {systemConfig?.site_logo ? (
-                    <img
+                    <Image
                       src={systemConfig.site_logo}
                       alt={siteName}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

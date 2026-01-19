@@ -1,27 +1,81 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/Button";
+import FormField from "@/components/ui/FormField";
+import { useAuthStore } from "@/lib/store/authStore";
+import ImageUploader from "@/components/ui/ImageUploader";
+
+// 1. Define Profile Schema
+const profileSchema = z.object({
+  name: z.string().min(1, "Họ và tên là bắt buộc").max(100, "Họ và tên tối đa 100 ký tự"),
+  phone: z.string().regex(/^[0-9+]{9,15}$/, "Số điện thoại không hợp lệ").optional().nullable().or(z.literal("")),
+  image: z.string().optional().nullable(),
+  birthday: z.string().optional().nullable(),
+  gender: z.string().optional().nullable(),
+  address: z.string().max(255, "Địa chỉ tối đa 255 ký tự").optional().nullable(),
+  about: z.string().max(1000, "Giới thiệu tối đa 1000 ký tự").optional().nullable(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function UserProfileEditPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    image: "",
-    birthday: "",
-    gender: "",
-    address: "",
-    about: "",
-  });
-  const [loading, setLoading] = useState(false);
+  const { user } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    // TODO: Implement API call to update profile
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      image: "",
+      birthday: "",
+      gender: "",
+      address: "",
+      about: "",
+    },
+  });
+
+  // Initialize form with user data
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name || "",
+        phone: user.phone || "",
+        image: user.image || "",
+        birthday: user.birthday || "",
+        gender: user.gender || "",
+        address: user.address || "",
+        about: user.about || "",
+      });
+    }
+  }, [user, reset]);
+
+  const onSubmit = async (data: ProfileFormValues) => {
+    setIsLoading(true);
+    setSuccess(null);
+
+    try {
+      // TODO: Implement API call to update profile
+      console.log("Updating profile with:", data);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setSuccess("Cập nhật thông tin thành công!");
+    } catch (err: any) {
+      console.error("Update profile error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -35,62 +89,100 @@ export default function UserProfileEditPage() {
             </div>
             <Link
               href="/user/profile"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
             >
               Quay lại
             </Link>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Họ và tên</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <div className="bg-white rounded-xl shadow-sm p-8">
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm animate-in fade-in duration-300">
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="flex flex-col items-center mb-8">
+              <label className="block text-sm font-semibold text-gray-700 mb-4 self-start">Ảnh đại diện</label>
+              <Controller
+                name="image"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                  <ImageUploader value={value} onChange={onChange} />
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                label="Họ và tên"
                 placeholder="Nhập họ và tên"
+                {...register("name")}
+                error={errors.name?.message}
+                required
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Số điện thoại</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <FormField
+                label="Số điện thoại"
                 placeholder="Nhập số điện thoại"
+                {...register("phone")}
+                error={errors.phone?.message}
               />
+
+              <FormField
+                label="Ngày sinh"
+                type="date"
+                {...register("birthday")}
+                error={errors.birthday?.message}
+              />
+
+              <div className="space-y-1">
+                <label className="block text-sm font-semibold text-gray-700">Giới tính</label>
+                <select
+                  {...register("gender")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                >
+                  <option value="">Chọn giới tính</option>
+                  <option value="male">Nam</option>
+                  <option value="female">Nữ</option>
+                  <option value="other">Khác</option>
+                </select>
+                {errors.gender && <p className="text-xs text-red-500">{errors.gender.message}</p>}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Giới thiệu bản thân</label>
-              <textarea
-                value={formData.about}
-                onChange={(e) => setFormData({ ...formData, about: e.target.value })}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập giới thiệu ngắn về bản thân"
-              />
-            </div>
+            <FormField
+              label="Địa chỉ"
+              placeholder="Nhập địa chỉ của bạn"
+              {...register("address")}
+              error={errors.address?.message}
+            />
 
-            <div className="flex justify-end space-x-4">
+            <FormField
+              label="Giới thiệu bản thân"
+              type="textarea"
+              rows={4}
+              placeholder="Viết một vài dòng giới thiệu về bản thân..."
+              {...register("about")}
+              error={errors.about?.message}
+            />
+
+            <div className="flex justify-end space-x-4 pt-4">
               <Link
                 href="/user/profile"
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all active:scale-95"
               >
                 Hủy
               </Link>
-              <button
+              <Button
                 type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                disabled={isLoading}
+                className="px-8 py-2.5"
               >
-                {loading ? "Đang lưu..." : "Lưu thay đổi"}
-              </button>
+                {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
+              </Button>
             </div>
           </form>
         </div>
@@ -98,4 +190,3 @@ export default function UserProfileEditPage() {
     </div>
   );
 }
-

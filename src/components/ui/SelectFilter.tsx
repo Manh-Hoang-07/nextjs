@@ -28,9 +28,9 @@ export default function SelectFilter({
   placeholder = "Chọn...",
   disabled = false,
   error,
-  options = [],
+  options,
   apiEndpoint,
-  apiParams = {},
+  apiParams,
   valueField = "id",
   labelField = "name",
   onChange,
@@ -47,7 +47,7 @@ export default function SelectFilter({
 
   const loadOptions = useCallback(async () => {
     if (!apiEndpoint) {
-      setNormalizedOptions(normalize(options));
+      setNormalizedOptions(normalize(options || []));
       return;
     }
 

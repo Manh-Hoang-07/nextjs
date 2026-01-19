@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { SystemConfig } from "@/types/api";
 
@@ -63,12 +64,13 @@ export function PublicFooter({ systemConfig }: PublicFooterProps) {
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3 overflow-hidden">
+              <div className="relative w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3 overflow-hidden">
                 {systemConfig?.site_logo ? (
-                  <img
+                  <Image
                     src={systemConfig.site_logo}
                     alt={systemInfo.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 ) : (
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

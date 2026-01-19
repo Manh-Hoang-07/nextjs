@@ -13,22 +13,22 @@ import { userEndpoints } from "@/lib/api/endpoints";
 // 1. Define Project Schema
 const projectSchema = z.object({
   name: z.string().min(1, "Tên dự án là bắt buộc").max(255, "Tên dự án không được vượt quá 255 ký tự"),
-  slug: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
-  short_description: z.string().optional().nullable(),
-  cover_image: z.string().optional().nullable(),
-  location: z.string().optional().nullable(),
-  area: z.coerce.number().optional().nullable(),
+  slug: z.string().max(255, "Slug không được vượt quá 255 ký tự").optional().nullable(),
+  description: z.string().min(1, "Mô tả chi tiết là bắt buộc"),
+  short_description: z.string().max(500, "Mô tả ngắn tối đa 500 ký tự").optional().nullable(),
+  cover_image: z.string().min(1, "Ảnh bìa là bắt buộc"),
+  location: z.string().max(255, "Địa điểm tối đa 255 ký tự").optional().nullable(),
+  area: z.coerce.number().positive("Diện tích phải là số dương").optional().nullable(),
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),
-  status: z.string().default("planning"),
-  client_name: z.string().optional().nullable(),
-  budget: z.coerce.number().optional().nullable(),
-  images: z.array(z.string()).min(1, "Hình ảnh dự án là bắt buộc"),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("planning"),
+  client_name: z.string().max(255, "Tên khách hàng tối đa 255 ký tự").optional().nullable(),
+  budget: z.coerce.number().positive("Ngân sách phải là số dương").optional().nullable(),
+  images: z.array(z.string()).min(1, "Bộ sưu tập ảnh dự án phải có ít nhất 1 ảnh"),
   featured: z.boolean().default(false),
-  sort_order: z.coerce.number().default(0),
-  meta_title: z.string().max(255).optional().nullable(),
-  meta_description: z.string().optional().nullable(),
+  sort_order: z.coerce.number().int().min(0, "Thứ tự không được âm").default(0),
+  meta_title: z.string().max(255, "Meta Title tối đa 255 ký tự").optional().nullable(),
+  meta_description: z.string().max(500, "Meta Description tối đa 500 ký tự").optional().nullable(),
   canonical_url: z.string().url("URL không hợp lệ").or(z.literal("")).optional().nullable(),
   og_image: z.string().optional().nullable(),
 });
@@ -89,6 +89,7 @@ export default function ProjectForm({
     control,
     reset,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
@@ -360,9 +361,10 @@ export default function ProjectForm({
                 accept="image/*"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []);
+                  // Here we should handle actual file uploading or use preview URLs
+                  // For now, let's keep the logic but fix the setValue call
                   const currentImages = control._formValues.images || [];
                   const newImages = [...currentImages, ...files.map(f => URL.createObjectURL(f))];
-                  control._fields.images?._f.value = newImages;
                   setValue("images", newImages, { shouldValidate: true });
                 }}
                 className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
@@ -375,6 +377,7 @@ export default function ProjectForm({
             <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mt-4">
               {control._formValues.images?.map((img: string, idx: number) => (
                 <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img} alt="preview" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                   <button
                     type="button"

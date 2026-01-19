@@ -17,26 +17,26 @@ import api from "@/lib/api/client";
 // 1. Định nghĩa Post Schema (Declarative)
 const postSchema = z.object({
   name: z.string().min(1, "Tiêu đề là bắt buộc").max(255, "Tiêu đề không được vượt quá 255 ký tự"),
-  excerpt: z.string().optional().nullable(),
+  excerpt: z.string().max(500, "Tóm tắt tối đa 500 ký tự").optional().nullable().or(z.literal("")),
   content: z.string().min(1, "Nội dung là bắt buộc"),
-  cover_image: z.string().optional().nullable(),
-  image: z.string().optional().nullable(),
+  cover_image: z.string().min(1, "Ảnh bìa là bắt buộc"),
+  image: z.string().optional().nullable().or(z.literal("")),
   post_type: z.string().default("text"),
   video_url: z.string().url("Video URL không hợp lệ").or(z.literal("")).optional().nullable(),
   audio_url: z.string().url("Audio URL không hợp lệ").or(z.literal("")).optional().nullable(),
-  status: z.string().default("draft"),
-  published_at: z.string().optional().nullable(),
-  primary_postcategory_id: z.coerce.number().positive("Vui lòng chọn danh mục chính").optional().nullable(),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("draft"),
+  published_at: z.string().optional().nullable().or(z.literal("")),
+  primary_postcategory_id: z.coerce.number({ invalid_type_error: "Vui lòng chọn danh mục chính" }).positive("Vui lòng chọn danh mục chính"),
   category_ids: z.array(z.number()).default([]),
   tag_ids: z.array(z.number()).default([]),
   is_featured: z.boolean().default(false),
   is_pinned: z.boolean().default(false),
-  meta_title: z.string().max(255, "Meta Title quá dài").optional().nullable(),
-  meta_description: z.string().optional().nullable(),
+  meta_title: z.string().max(255, "Meta Title quá dài").optional().nullable().or(z.literal("")),
+  meta_description: z.string().max(500, "Meta Description quá dài").optional().nullable().or(z.literal("")),
   canonical_url: z.string().url("URL không hợp lệ").or(z.literal("")).optional().nullable(),
-  og_title: z.string().max(255, "OG Title quá dài").optional().nullable(),
-  og_description: z.string().optional().nullable(),
-  og_image: z.string().optional().nullable(),
+  og_title: z.string().max(255, "OG Title quá dài").optional().nullable().or(z.literal("")),
+  og_description: z.string().max(500, "OG Description quá dài").optional().nullable().or(z.literal("")),
+  og_image: z.string().optional().nullable().or(z.literal("")),
 });
 
 type PostFormValues = z.infer<typeof postSchema>;
@@ -46,6 +46,8 @@ interface PostFormProps {
   post?: any;
   statusEnums?: Array<{ value: string; label?: string; name?: string }>;
   postTypeEnums?: Array<{ value: string; label?: string; name?: string }>;
+  categoryEnums?: Array<{ value: number; label?: string; name?: string }>;
+  tagEnums?: Array<{ value: number; label?: string; name?: string }>;
   apiErrors?: Record<string, string | string[]>;
   onSubmit?: (data: PostFormValues) => void;
   onCancel?: () => void;
@@ -63,6 +65,8 @@ export default function PostForm({
   post,
   statusEnums = [],
   postTypeEnums = [],
+  categoryEnums,
+  tagEnums,
   apiErrors = {},
   onSubmit,
   onCancel,
@@ -91,7 +95,7 @@ export default function PostForm({
       audio_url: "",
       status: "draft",
       published_at: "",
-      primary_postcategory_id: null,
+      primary_postcategory_id: undefined,
       category_ids: [],
       tag_ids: [],
       is_featured: false,
@@ -110,25 +114,39 @@ export default function PostForm({
   // Load Categories & Tags
   useEffect(() => {
     if (show) {
-      const fetchData = async () => {
-        try {
-          const [catRes, tagRes] = await Promise.all([
-            api.get(adminEndpoints.postCategories.list),
-            api.get(adminEndpoints.postTags.list)
-          ]);
-
-          const catData = catRes.data?.data || [];
-          setCategoryOptions(catData.map((c: any) => ({ value: c.id, label: c.name })));
-
-          const tagData = tagRes.data?.data || [];
-          setTagOptions(tagData.map((t: any) => ({ value: t.id, label: t.name })));
-        } catch (err) {
-          console.error("Failed to load options", err);
+      if (categoryEnums || tagEnums) {
+        if (categoryEnums) {
+          setCategoryOptions(categoryEnums.map(c => ({ value: c.value, label: c.label || c.name || String(c.value) })));
         }
-      };
-      fetchData();
+        if (tagEnums) {
+          setTagOptions(tagEnums.map(t => ({ value: t.value, label: t.label || t.name || String(t.value) })));
+        }
+      }
+
+      if (!categoryEnums || !tagEnums) {
+        const fetchData = async () => {
+          try {
+            const [catRes, tagRes] = await Promise.all([
+              !categoryEnums ? api.get(adminEndpoints.postCategories.list) : Promise.resolve({ data: { data: [] } }),
+              !tagEnums ? api.get(adminEndpoints.postTags.list) : Promise.resolve({ data: { data: [] } })
+            ]);
+
+            if (!categoryEnums) {
+              const catData = catRes.data?.data || [];
+              setCategoryOptions(catData.map((c: any) => ({ value: c.id, label: c.name })));
+            }
+            if (!tagEnums) {
+              const tagData = tagRes.data?.data || [];
+              setTagOptions(tagData.map((t: any) => ({ value: t.id, label: t.name })));
+            }
+          } catch (err) {
+            console.error("Failed to load options", err);
+          }
+        };
+        fetchData();
+      }
     }
-  }, [show]);
+  }, [show, categoryEnums, tagEnums]);
 
   // Reset/Initialize form
   useEffect(() => {
@@ -158,7 +176,29 @@ export default function PostForm({
           og_image: post.og_image || "",
         });
       } else {
-        reset();
+        reset({
+          name: "",
+          excerpt: "",
+          content: "",
+          cover_image: "",
+          image: "",
+          post_type: "text",
+          video_url: "",
+          audio_url: "",
+          status: "draft",
+          published_at: "",
+          primary_postcategory_id: undefined,
+          category_ids: [],
+          tag_ids: [],
+          is_featured: false,
+          is_pinned: false,
+          meta_title: "",
+          meta_description: "",
+          canonical_url: "",
+          og_title: "",
+          og_description: "",
+          og_image: "",
+        });
       }
     }
   }, [post, reset, show]);
@@ -189,7 +229,7 @@ export default function PostForm({
 
   return (
     <Modal show={show} onClose={onCancel || (() => { })} title={formTitle} size="xl" loading={isSubmitting}>
-      <form onSubmit={handleSubmit((data) => onSubmit?.(data))} className="space-y-8 p-1">
+      <form onSubmit={handleSubmit((data) => onSubmit?.(data as PostFormValues))} className="space-y-8 p-1">
 
         {/* SECTION: THÔNG TIN BÀI VIẾT */}
         <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
@@ -260,6 +300,7 @@ export default function PostForm({
                 render={({ field }) => (
                   <CKEditor
                     {...field}
+                    value={field.value || ""}
                     height="180px"
                     placeholder="Nhập tóm tắt bài viết..."
                   />
@@ -363,14 +404,16 @@ export default function PostForm({
               name="primary_postcategory_id"
               control={control}
               render={({ field }) => (
-                <SearchableSelect
-                  {...field}
-                  searchApi={adminEndpoints.postCategories.list}
-                  label="Danh mục chính"
-                  labelField="name"
-                  placeholder="Chọn danh mục chính"
-                  error={errors.primary_postcategory_id?.message}
-                />
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700">Danh mục chính <span className="text-red-500">*</span></label>
+                  <SearchableSelect
+                    {...field}
+                    searchApi={adminEndpoints.postCategories.list}
+                    labelField="name"
+                    placeholder="Chọn danh mục chính"
+                    error={errors.primary_postcategory_id?.message}
+                  />
+                </div>
               )}
             />
 

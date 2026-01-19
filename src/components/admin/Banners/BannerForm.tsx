@@ -244,7 +244,6 @@ export default function BannerForm({
                 render={({ field }) => (
                   <ImageUploader
                     {...field}
-                    error={errors.image?.message as any}
                   />
                 )}
               />
@@ -261,7 +260,6 @@ export default function BannerForm({
                 render={({ field }) => (
                   <ImageUploader
                     {...field}
-                    error={errors.mobile_image?.message as any}
                   />
                 )}
               />

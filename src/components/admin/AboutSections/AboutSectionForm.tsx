@@ -13,13 +13,13 @@ import { userEndpoints } from "@/lib/api/endpoints";
 // 1. Define AboutSection Schema
 const aboutSectionSchema = z.object({
   title: z.string().min(1, "Tiêu đề là bắt buộc").max(255, "Tiêu đề tối đa 255 ký tự"),
-  slug: z.string().max(255).optional().nullable().or(z.literal("")),
+  slug: z.string().max(255, "Slug tối đa 255 ký tự").optional().nullable(),
   content: z.string().min(1, "Nội dung là bắt buộc"),
-  image: z.string().optional().nullable().or(z.literal("")),
+  image: z.string().optional().nullable(),
   video_url: z.string().url("URL không hợp lệ").or(z.literal("")).optional().nullable(),
-  section_type: z.string().default("history"),
-  status: z.string().default("active"),
-  sort_order: z.coerce.number().default(0),
+  section_type: z.string().min(1, "Loại Section là bắt buộc").default("history"),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
+  sort_order: z.coerce.number().int().min(0, "Thứ tự không được âm").default(0),
 });
 
 type AboutSectionFormValues = z.infer<typeof aboutSectionSchema>;

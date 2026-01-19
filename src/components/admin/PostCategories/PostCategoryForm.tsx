@@ -17,12 +17,12 @@ const categorySchema = z.object({
   description: z.string().optional().nullable(),
   image: z.string().optional().nullable(),
   og_image: z.string().optional().nullable(),
-  status: z.string().default("active"),
-  sort_order: z.coerce.number().default(0),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
+  sort_order: z.coerce.number().int().min(0, "Thứ tự không được âm").default(0),
   parent_id: z.coerce.number().optional().nullable(),
-  meta_title: z.string().max(255).optional().nullable(),
-  meta_description: z.string().max(1000).optional().nullable(),
-  canonical_url: z.string().url("URL không hợp lệ").optional().or(z.literal("")).nullable(),
+  meta_title: z.string().max(255, "Meta Title tối đa 255 ký tự").optional().nullable(),
+  meta_description: z.string().max(1000, "Meta Description tối đa 1000 ký tự").optional().nullable(),
+  canonical_url: z.string().url("URL không hợp lệ").or(z.literal("")).optional().nullable(),
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;

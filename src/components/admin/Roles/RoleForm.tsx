@@ -15,9 +15,9 @@ import api from "@/lib/api/client";
 // 1. Define Role Schema
 const roleSchema = z.object({
   code: z.string().min(1, "Mã code là bắt buộc").max(100, "Mã code không được vượt quá 100 ký tự"),
-  name: z.string().max(150, "Tên vai trò không được vượt quá 150 ký tự").optional().nullable(),
+  name: z.string().min(1, "Tên vai trò là bắt buộc").max(150, "Tên vai trò không được vượt quá 150 ký tự"),
   parent_id: z.coerce.number().optional().nullable(),
-  status: z.string().default("active"),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
   context_ids: z.array(z.number()).default([]),
 });
 
@@ -190,15 +190,17 @@ export default function RoleForm({
               name="parent_id"
               control={control}
               render={({ field }) => (
-                <SearchableSelect
-                  {...field}
-                  label="Vai trò cha"
-                  searchApi={adminEndpoints.roles.list}
-                  placeholder="Tìm kiếm vai trò cha..."
-                  excludeId={role?.id}
-                  labelField="name"
-                  error={errors.parent_id?.message}
-                />
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700">Vai trò cha</label>
+                  <SearchableSelect
+                    {...field}
+                    searchApi={adminEndpoints.roles.list}
+                    placeholder="Tìm kiếm vai trò cha..."
+                    excludeId={role?.id}
+                    labelField="name"
+                    error={errors.parent_id?.message}
+                  />
+                </div>
               )}
             />
             <Controller

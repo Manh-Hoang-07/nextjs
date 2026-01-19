@@ -11,15 +11,15 @@ import ImageUploader from "@/components/ui/ImageUploader";
 // 1. Define Testimonial Schema
 const testimonialSchema = z.object({
   client_name: z.string().min(1, "Tên khách hàng là bắt buộc").max(100, "Tên khách hàng không được vượt quá 100 ký tự"),
-  client_position: z.string().max(100).optional().nullable(),
-  client_company: z.string().max(100).optional().nullable(),
+  client_position: z.string().max(100, "Chức vụ tối đa 100 ký tự").optional().nullable(),
+  client_company: z.string().max(100, "Công ty tối đa 100 ký tự").optional().nullable(),
   client_avatar: z.string().optional().nullable(),
   content: z.string().min(1, "Nội dung là bắt buộc").max(2000, "Nội dung không được vượt quá 2000 ký tự"),
-  rating: z.coerce.number().min(1).max(5).optional().nullable(),
+  rating: z.coerce.number().min(1, "Đánh giá tối thiểu 1 sao").max(5, "Đánh giá tối đa 5 sao").optional().nullable(),
   project_id: z.coerce.number().optional().nullable(),
   featured: z.boolean().default(false),
-  status: z.string().default("active"),
-  sort_order: z.coerce.number().default(0),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
+  sort_order: z.coerce.number().int().min(0, "Thứ tự không được âm").default(0),
 });
 
 type TestimonialFormValues = z.infer<typeof testimonialSchema>;

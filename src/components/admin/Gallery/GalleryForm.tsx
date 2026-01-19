@@ -11,13 +11,13 @@ import ImageUploader from "@/components/ui/ImageUploader";
 // 1. Define Gallery Schema
 const gallerySchema = z.object({
   title: z.string().min(1, "Tiêu đề là bắt buộc").max(255, "Tiêu đề tối đa 255 ký tự"),
-  slug: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
+  slug: z.string().max(255, "Slug tối đa 255 ký tự").optional().nullable(),
+  description: z.string().max(1000, "Mô tả tối đa 1000 ký tự").optional().nullable(),
   cover_image: z.string().optional().nullable(),
   images: z.array(z.string()).min(1, "Vui lòng chọn ít nhất 1 ảnh"),
   featured: z.boolean().default(false),
-  status: z.string().default("active"),
-  sort_order: z.coerce.number().default(0),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
+  sort_order: z.coerce.number().int().min(0, "Thứ tự không được âm").default(0),
 });
 
 type GalleryFormValues = z.infer<typeof gallerySchema>;
@@ -256,6 +256,7 @@ export default function GalleryForm({
                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-4 bg-white rounded-2xl border border-gray-200">
                         {value.map((url, idx) => (
                           <div key={idx} className="relative aspect-square group rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
                             <button
                               type="button"

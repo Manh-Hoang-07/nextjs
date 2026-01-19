@@ -2,47 +2,59 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/Button";
+import FormField from "@/components/ui/FormField";
+
+// 1. Define Change Password Schema
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Mật khẩu hiện tại là bắt buộc"),
+  newPassword: z.string().min(1, "Mật khẩu mới là bắt buộc").min(6, "Mật khẩu mới phải có ít nhất 6 ký tự").max(100, "Mật khẩu mới quá dài"),
+  confirmPassword: z.string().min(1, "Xác nhận mật khẩu là bắt buộc"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Mật khẩu xác nhận không khớp",
+  path: ["confirmPassword"],
+});
+
+type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 export default function UserChangePasswordPage() {
-  const [formData, setFormData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
-      return;
-    }
-
-    if (formData.newPassword.length < 6) {
-      setError("Mật khẩu mới phải có ít nhất 6 ký tự");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setSuccess("");
+  const onSubmit = async (data: ChangePasswordFormValues) => {
+    setIsLoading(true);
+    setServerError(null);
+    setSuccess(null);
 
     try {
       // TODO: Implement API call to change password
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Changing password with:", data);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       setSuccess("Đổi mật khẩu thành công!");
-      setFormData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+      reset();
     } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra, vui lòng thử lại");
+      setServerError(err.message || "Có lỗi xảy ra, vui lòng thử lại");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -53,81 +65,72 @@ export default function UserChangePasswordPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Đổi mật khẩu</h1>
-              <p className="mt-2 text-gray-600">Thay đổi mật khẩu đăng nhập của bạn</p>
+              <p className="mt-2 text-gray-600">Thay đổi mật khẩu đăng nhập của bạn để bảo vệ tài khoản</p>
             </div>
             <Link
               href="/user/profile"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
             >
               Quay lại
             </Link>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu hiện tại</label>
-              <input
-                type="password"
-                value={formData.currentPassword}
-                onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập mật khẩu hiện tại"
-                required
-              />
+        <div className="bg-white rounded-xl shadow-sm p-8">
+          {serverError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              {serverError}
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu mới</label>
-              <input
-                type="password"
-                value={formData.newPassword}
-                onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập mật khẩu mới"
-                required
-              />
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+              {success}
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu mới</label>
-              <input
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập lại mật khẩu mới"
-                required
-              />
-            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              label="Mật khẩu hiện tại"
+              type="password"
+              placeholder="Nhập mật khẩu hiện tại"
+              {...register("currentPassword")}
+              error={errors.currentPassword?.message}
+              required
+            />
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
+            <FormField
+              label="Mật khẩu mới"
+              type="password"
+              placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+              {...register("newPassword")}
+              error={errors.newPassword?.message}
+              required
+            />
 
-            {success && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                {success}
-              </div>
-            )}
+            <FormField
+              label="Xác nhận mật khẩu mới"
+              type="password"
+              placeholder="Nhập lại mật khẩu mới"
+              {...register("confirmPassword")}
+              error={errors.confirmPassword?.message}
+              required
+            />
 
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end space-x-4 pt-4">
               <Link
                 href="/user/profile"
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all active:scale-95"
               >
                 Hủy
               </Link>
-              <button
+              <Button
                 type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                disabled={isLoading}
+                className="px-8 py-2.5"
               >
-                {loading ? "Đang đổi..." : "Đổi mật khẩu"}
-              </button>
+                {isLoading ? "Đang xử lý..." : "Đổi mật khẩu"}
+              </Button>
             </div>
           </form>
         </div>
@@ -135,4 +138,3 @@ export default function UserChangePasswordPage() {
     </div>
   );
 }
-

@@ -45,7 +45,7 @@ export function CertificateList({ initialCertificates }: CertificateListProps) {
                 cert.title.toLowerCase().includes(searchLower) ||
                 cert.description.toLowerCase().includes(searchLower) ||
                 cert.issuedBy.toLowerCase().includes(searchLower) ||
-                cert.skills.some(skill => skill.toLowerCase().includes(searchLower))
+                (cert.skills || []).some(skill => skill.toLowerCase().includes(searchLower))
             );
         }
         filtered.sort((a, b) => {
@@ -187,14 +187,14 @@ export function CertificateList({ initialCertificates }: CertificateListProps) {
                                     )}
                                 </div>
                                 <div className="flex flex-wrap gap-2 mb-4">
-                                    {certificate.skills.slice(0, 2).map((skill, index) => (
+                                    {(certificate.skills || []).slice(0, 2).map((skill, index) => (
                                         <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
                                             {skill}
                                         </span>
                                     ))}
-                                    {certificate.skills.length > 2 && (
+                                    {(certificate.skills || []).length > 2 && (
                                         <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                            +{certificate.skills.length - 2} nữa
+                                            +{(certificate.skills || []).length - 2} nữa
                                         </span>
                                     )}
                                 </div>
@@ -247,7 +247,7 @@ export function CertificateList({ initialCertificates }: CertificateListProps) {
                             <div>
                                 <h4 className="font-bold text-gray-900 mb-3 border-b pb-1">Kỹ năng áp dụng</h4>
                                 <div className="flex flex-wrap gap-2">
-                                    {selectedCertificate.skills.map((skill, index) => (
+                                    {(selectedCertificate.skills || []).map((skill, index) => (
                                         <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                                             {skill}
                                         </span>

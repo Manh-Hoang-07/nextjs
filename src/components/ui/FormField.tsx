@@ -42,7 +42,7 @@ interface FormFieldProps {
   multiple?: boolean;
 
   // Checkbox specific
-  checkboxLabel?: string;
+  checkboxLabel?: React.ReactNode;
 }
 
 const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, FormFieldProps>(

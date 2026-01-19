@@ -12,11 +12,11 @@ import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
 const bannerLocationSchema = z.object({
   code: z.string()
     .min(1, "Mã vị trí là bắt buộc")
-    .regex(/^[a-z_]+$/, "Mã vị trí chỉ chứa chữ thường và dấu gạch dưới")
+    .regex(/^[a-z0-9_]+$/, "Mã vị trí chỉ chứa chữ cái thường, số và dấu gạch dưới")
     .max(100, "Mã tối đa 100 ký tự"),
   name: z.string().min(1, "Tên vị trí là bắt buộc").max(255, "Tên tối đa 255 ký tự"),
-  description: z.string().max(500).optional().nullable(),
-  status: z.string().default("active"),
+  description: z.string().max(500, "Mô tả tối đa 500 ký tự").optional().nullable(),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
 });
 
 type BannerLocationFormValues = z.infer<typeof bannerLocationSchema>;

@@ -13,10 +13,10 @@ const partnerSchema = z.object({
   name: z.string().min(1, "Tên đối tác là bắt buộc").max(255, "Tên đối tác không được vượt quá 255 ký tự"),
   logo: z.string().min(1, "Logo là bắt buộc"),
   website: z.string().url("URL không hợp lệ").or(z.literal("")).optional().nullable(),
-  description: z.string().max(500).optional().nullable(),
-  type: z.string().default("client"),
-  status: z.string().default("active"),
-  sort_order: z.coerce.number().default(0),
+  description: z.string().max(500, "Mô tả tối đa 500 ký tự").optional().nullable(),
+  type: z.string().min(1, "Loại đối tác là bắt buộc").default("client"),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
+  sort_order: z.coerce.number().int().min(0, "Thứ tự không được âm").default(0),
 });
 
 type PartnerFormValues = z.infer<typeof partnerSchema>;
