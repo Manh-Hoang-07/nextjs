@@ -103,7 +103,7 @@ const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelect
             {...commonProps}
             ref={ref as any}
             type={type}
-            value={value ?? ""}
+            {...(value !== undefined ? { value: value ?? "" } : {})}
             onChange={handleInputChange}
             maxLength={typeof maxlength === "number" ? maxlength : undefined}
             min={min}
@@ -119,7 +119,7 @@ const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelect
           <textarea
             {...commonProps}
             ref={ref as any}
-            value={value ?? ""}
+            {...(value !== undefined ? { value: value ?? "" } : {})}
             onChange={handleInputChange}
             maxLength={typeof maxlength === "number" ? maxlength : undefined}
             rows={typeof rows === "number" ? rows : parseInt(String(rows))}
@@ -133,7 +133,7 @@ const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelect
           <select
             {...commonProps}
             ref={ref as any}
-            value={value ?? (multiple ? [] : "")}
+            {...(value !== undefined ? { value: value ?? (multiple ? [] : "") } : {})}
             onChange={handleInputChange}
             multiple={multiple}
             className={`${baseInputClass} ${multiple ? "min-h-[120px]" : ""}`}
@@ -155,7 +155,7 @@ const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelect
               {...commonProps}
               ref={ref as any}
               type="checkbox"
-              checked={!!value}
+              {...(value !== undefined ? { checked: !!value } : {})}
               onChange={handleInputChange}
               className="h-5 w-5 text-blue-600 border-gray-300 rounded-lg transition-all focus:ring-blue-500 cursor-pointer"
             />
@@ -176,7 +176,7 @@ const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelect
                   id={`${fieldId}-${option.value}`}
                   type="radio"
                   value={option.value}
-                  checked={value === option.value}
+                  {...(value !== undefined ? { checked: value === option.value } : {})}
                   onChange={handleInputChange}
                   className="h-5 w-5 text-blue-600 border-gray-300 transition-all focus:ring-blue-500 cursor-pointer"
                 />

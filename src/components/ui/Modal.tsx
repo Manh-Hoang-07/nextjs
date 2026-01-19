@@ -67,7 +67,7 @@ export default function Modal({
         onClick={handleBackdropClick}
       />
       <div
-        className={`bg-white rounded-lg shadow-xl max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden ${sizeClasses[size]}`}
+        className={`bg-white rounded-lg shadow-xl w-full max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden ${sizeClasses[size]} mx-4`}
       >
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
