@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import api from "@/lib/api/client";
+import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
-import { useToastContext } from "@/contexts/ToastContext";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import Actions from "@/components/ui/Actions";
@@ -51,155 +49,42 @@ export default function AdminAboutSections({
   title = "Quản lý giới thiệu",
   createButtonText = "Thêm section mới",
 }: AdminAboutSectionsProps) {
-  const [items, setItems] = useState<AboutSection[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    totalPages: 1,
-    totalItems: 0,
+  const {
+    items,
+    loading,
+    pagination,
+    filters,
+    apiErrors,
+    modals,
+    selectedItem,
+    openCreateModal,
+    closeCreateModal,
+    openEditModal,
+    closeEditModal,
+    openDeleteModal,
+    closeDeleteModal,
+    updateFilters,
+    changePage,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    getSerialNumber,
+    hasData,
+  } = useAdminListPage({
+    endpoints: {
+      list: adminEndpoints.aboutSections.list,
+      create: adminEndpoints.aboutSections.create,
+      update: (id) => adminEndpoints.aboutSections.update(id),
+      delete: (id) => adminEndpoints.aboutSections.delete(id),
+      show: (id) => adminEndpoints.aboutSections.show(id),
+    },
+    messages: {
+      createSuccess: "Đã tạo thành công",
+      updateSuccess: "Đã cập nhật thành công",
+      deleteSuccess: "Đã xóa thành công",
+    },
+    fetchDetailBeforeEdit: true,
   });
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [apiErrors, setApiErrors] = useState<Record<string, any>>({});
-  const [modals, setModals] = useState({
-    create: false,
-    edit: false,
-    delete: false,
-  });
-  const [selectedItem, setSelectedItem] = useState<AboutSection | null>(null);
-  const { showSuccess, showError } = useToastContext();
-
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page: pagination.page,
-        ...filters,
-      };
-
-      const response = await api.get(adminEndpoints.aboutSections.list, { params });
-      const data = response.data?.data || response.data || {};
-
-      if (Array.isArray(data)) {
-        setItems(data);
-      } else {
-        setItems(data.items || data.data || []);
-        if (data.pagination) {
-          setPagination({
-            page: data.pagination.page || 1,
-            totalPages: data.pagination.totalPages || 1,
-            totalItems: data.pagination.totalItems || 0,
-          });
-        }
-      }
-      setApiErrors({});
-    } catch (err: any) {
-      showError("Không thể tải danh sách");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.page, filters, showError]);
-
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  const handleFilterUpdate = (newFilters: Record<string, any>) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  };
-
-  const openCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: true }));
-    setApiErrors({});
-  };
-
-  const closeCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: false }));
-    setApiErrors({});
-  };
-
-  const openEditModal = async (item: AboutSection) => {
-    try {
-      // Fetch detail before edit
-      const response = await api.get(adminEndpoints.aboutSections.show(item.id));
-      const data = response.data?.data || response.data;
-      setSelectedItem(data);
-      setModals((prev) => ({ ...prev, edit: true }));
-      setApiErrors({});
-    } catch (err: any) {
-      showError("Không thể tải thông tin chi tiết");
-      setSelectedItem(item);
-      setModals((prev) => ({ ...prev, edit: true }));
-    }
-  };
-
-  const closeEditModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, edit: false }));
-    setApiErrors({});
-  };
-
-  const confirmDelete = (item: AboutSection) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, delete: true }));
-  };
-
-  const closeDeleteModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, delete: false }));
-  };
-
-  const handleCreated = async (formData: any) => {
-    try {
-      const response = await api.post(adminEndpoints.aboutSections.create, formData);
-      showSuccess("Đã tạo thành công");
-      closeCreateModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Có lỗi xảy ra khi tạo mới");
-    }
-  };
-
-  const handleUpdated = async (formData: any) => {
-    if (!selectedItem) return;
-
-    try {
-      await api.put(adminEndpoints.aboutSections.update(selectedItem.id), formData);
-      showSuccess("Đã cập nhật thành công");
-      closeEditModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Có lỗi xảy ra khi cập nhật");
-    }
-  };
-
-  const deleteItem = async () => {
-    if (!selectedItem) return;
-
-    try {
-      await api.delete(adminEndpoints.aboutSections.delete(selectedItem.id));
-      showSuccess("Đã xóa thành công");
-      closeDeleteModal();
-      fetchItems();
-    } catch (err: any) {
-      showError("Không thể xóa");
-    }
-  };
-
-  const getSerialNumber = (index: number): number => {
-    return (pagination.page - 1) * 10 + index + 1;
-  };
-
-  const hasData = items.length > 0;
 
   return (
     <div className="admin-about-sections">
@@ -215,7 +100,7 @@ export default function AdminAboutSections({
 
       <AboutSectionsFilter
         initialFilters={filters}
-        onUpdateFilters={handleFilterUpdate}
+        onUpdateFilters={updateFilters}
       />
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden mt-4">
@@ -253,7 +138,7 @@ export default function AdminAboutSections({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {items.map((item, index) => (
+                {items.map((item: AboutSection, index) => (
                   <tr key={item.id}>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {getSerialNumber(index)}
@@ -266,8 +151,8 @@ export default function AdminAboutSections({
                     <td className="px-6 py-4 text-sm">
                       <span
                         className={`px-2 py-1 text-xs font-semibold rounded-full ${item.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
                           }`}
                       >
                         {item.status === "active" ? "Hoạt động" : "Không hoạt động"}
@@ -288,7 +173,7 @@ export default function AdminAboutSections({
                         additionalActions={[
                           {
                             label: "Xóa",
-                            action: () => confirmDelete(item),
+                            action: () => openDeleteModal(item),
                             icon: "trash",
                           },
                         ]}
@@ -307,7 +192,7 @@ export default function AdminAboutSections({
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
           totalItems={pagination.totalItems}
-          onPageChange={handlePageChange}
+          onPageChange={changePage}
         />
       )}
 
@@ -316,7 +201,7 @@ export default function AdminAboutSections({
           show={modals.create}
           apiErrors={apiErrors}
           onClose={closeCreateModal}
-          onCreated={handleCreated}
+          onCreated={handleCreate}
         />
       )}
 
@@ -326,21 +211,19 @@ export default function AdminAboutSections({
           section={selectedItem}
           apiErrors={apiErrors}
           onClose={closeEditModal}
-          onUpdated={handleUpdated}
+          onUpdated={(data) => handleUpdate(selectedItem.id, data)}
         />
       )}
 
-      {modals.delete && selectedItem && (
+      {selectedItem && (
         <ConfirmModal
           show={modals.delete}
           title="Xác nhận xóa"
-          message={`Bạn có chắc chắn muốn xóa ${selectedItem.title || ""}?`}
+          message={`Bạn có chắc chắn muốn xóa ${(selectedItem as AboutSection).title || ""}?`}
           onClose={closeDeleteModal}
-          onConfirm={deleteItem}
+          onConfirm={() => handleDelete(selectedItem.id)}
         />
       )}
     </div>
   );
 }
-
-

@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import api from "@/lib/api/client";
+import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
-import { useToastContext } from "@/contexts/ToastContext";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import Actions from "@/components/ui/Actions";
@@ -43,155 +41,42 @@ export default function AdminPartners({
   title = "Quản lý đối tác",
   createButtonText = "Thêm đối tác mới",
 }: AdminPartnersProps) {
-  const [items, setItems] = useState<Partner[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    totalPages: 1,
-    totalItems: 0,
+  const {
+    items,
+    loading,
+    pagination,
+    filters,
+    apiErrors,
+    modals,
+    selectedItem,
+    openCreateModal,
+    closeCreateModal,
+    openEditModal,
+    closeEditModal,
+    openDeleteModal,
+    closeDeleteModal,
+    updateFilters,
+    changePage,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    getSerialNumber,
+    hasData,
+  } = useAdminListPage({
+    endpoints: {
+      list: adminEndpoints.partners.list,
+      create: adminEndpoints.partners.create,
+      update: (id) => adminEndpoints.partners.update(id),
+      delete: (id) => adminEndpoints.partners.delete(id),
+      show: (id) => adminEndpoints.partners.show(id),
+    },
+    messages: {
+      createSuccess: "Đã tạo thành công",
+      updateSuccess: "Đã cập nhật thành công",
+      deleteSuccess: "Đã xóa thành công",
+    },
+    fetchDetailBeforeEdit: true,
   });
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [apiErrors, setApiErrors] = useState<Record<string, any>>({});
-  const [modals, setModals] = useState({
-    create: false,
-    edit: false,
-    delete: false,
-  });
-  const [selectedItem, setSelectedItem] = useState<Partner | null>(null);
-  const { showSuccess, showError } = useToastContext();
-
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page: pagination.page,
-        ...filters,
-      };
-
-      const response = await api.get(adminEndpoints.partners.list, { params });
-      const result = response.data;
-
-      if (result.success) {
-        setItems(result.data || []);
-        const meta = result.meta || result.pagination;
-        if (meta) {
-          setPagination({
-            page: meta.page || 1,
-            totalPages: meta.totalPages || 1,
-            totalItems: meta.totalItems || 0,
-          });
-        }
-      } else {
-        setItems([]);
-      }
-      setApiErrors({});
-    } catch (err: any) {
-      showError("Không thể tải danh sách");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.page, filters, showError]);
-
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  const handleFilterUpdate = (newFilters: Record<string, any>) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  };
-
-  const openCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: true }));
-    setApiErrors({});
-  };
-
-  const closeCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: false }));
-    setApiErrors({});
-  };
-
-  const openEditModal = async (item: Partner) => {
-    try {
-      const response = await api.get(adminEndpoints.partners.show(item.id));
-      const data = response.data?.data || response.data;
-      setSelectedItem(data);
-      setModals((prev) => ({ ...prev, edit: true }));
-      setApiErrors({});
-    } catch (err: any) {
-      showError("Không thể tải thông tin chi tiết");
-      setSelectedItem(item);
-      setModals((prev) => ({ ...prev, edit: true }));
-    }
-  };
-
-  const closeEditModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, edit: false }));
-    setApiErrors({});
-  };
-
-  const confirmDelete = (item: Partner) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, delete: true }));
-  };
-
-  const closeDeleteModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, delete: false }));
-  };
-
-  const handleCreated = async (formData: any) => {
-    try {
-      await api.post(adminEndpoints.partners.create, formData);
-      showSuccess("Đã tạo thành công");
-      closeCreateModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Có lỗi xảy ra khi tạo mới");
-    }
-  };
-
-  const handleUpdated = async (formData: any) => {
-    if (!selectedItem) return;
-
-    try {
-      await api.put(adminEndpoints.partners.update(selectedItem.id), formData);
-      showSuccess("Đã cập nhật thành công");
-      closeEditModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Có lỗi xảy ra khi cập nhật");
-    }
-  };
-
-  const deleteItem = async () => {
-    if (!selectedItem) return;
-
-    try {
-      await api.delete(adminEndpoints.partners.delete(selectedItem.id));
-      showSuccess("Đã xóa thành công");
-      closeDeleteModal();
-      fetchItems();
-    } catch (err: any) {
-      showError("Không thể xóa");
-    }
-  };
-
-  const getSerialNumber = (index: number): number => {
-    return (pagination.page - 1) * 10 + index + 1;
-  };
-
-  const hasData = items.length > 0;
 
   return (
     <div className="admin-partners">
@@ -207,7 +92,7 @@ export default function AdminPartners({
 
       <PartnersFilter
         initialFilters={filters}
-        onUpdateFilters={handleFilterUpdate}
+        onUpdateFilters={updateFilters}
       />
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden mt-4">
@@ -245,7 +130,7 @@ export default function AdminPartners({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {items.map((item, index) => (
+                {items.map((item: Partner, index) => (
                   <tr key={item.id}>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {getSerialNumber(index)}
@@ -303,7 +188,7 @@ export default function AdminPartners({
                         additionalActions={[
                           {
                             label: "Xóa",
-                            action: () => confirmDelete(item),
+                            action: () => openDeleteModal(item),
                             icon: "trash",
                           },
                         ]}
@@ -322,7 +207,7 @@ export default function AdminPartners({
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
           totalItems={pagination.totalItems}
-          onPageChange={handlePageChange}
+          onPageChange={changePage}
         />
       )}
 
@@ -331,7 +216,7 @@ export default function AdminPartners({
           show={modals.create}
           apiErrors={apiErrors}
           onClose={closeCreateModal}
-          onCreated={handleCreated}
+          onCreated={handleCreate}
         />
       )}
 
@@ -341,21 +226,19 @@ export default function AdminPartners({
           partner={selectedItem}
           apiErrors={apiErrors}
           onClose={closeEditModal}
-          onUpdated={handleUpdated}
+          onUpdated={(data) => handleUpdate(selectedItem.id, data)}
         />
       )}
 
-      {modals.delete && selectedItem && (
+      {selectedItem && (
         <ConfirmModal
           show={modals.delete}
           title="Xác nhận xóa"
-          message={`Bạn có chắc chắn muốn xóa ${selectedItem.name || ""}?`}
+          message={`Bạn có chắc chắn muốn xóa ${(selectedItem as Partner).name || ""}?`}
           onClose={closeDeleteModal}
-          onConfirm={deleteItem}
+          onConfirm={() => handleDelete(selectedItem.id)}
         />
       )}
     </div>
   );
 }
-
-

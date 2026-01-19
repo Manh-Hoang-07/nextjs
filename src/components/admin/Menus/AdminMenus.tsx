@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import api from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
-import { useToastContext } from "@/contexts/ToastContext";
+import { useAdminListPage } from "@/hooks/useAdminListPage";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import Actions from "@/components/ui/Actions";
@@ -40,51 +40,54 @@ const getTypeLabel = (type?: string): string => {
 };
 
 export default function AdminMenus({ title = "Quản lý menu", createButtonText = "Thêm menu mới" }: AdminMenusProps) {
-  const [items, setItems] = useState<Menu[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [apiErrors, setApiErrors] = useState<Record<string, any>>({});
-  const [modals, setModals] = useState({ create: false, edit: false, delete: false });
-  const [selectedItem, setSelectedItem] = useState<Menu | null>(null);
+  const {
+    items,
+    loading,
+    pagination,
+    filters,
+    apiErrors,
+    modals,
+    selectedItem,
+    openCreateModal,
+    closeCreateModal,
+    openEditModal,
+    closeEditModal,
+    openDeleteModal,
+    closeDeleteModal,
+    updateFilters,
+    changePage,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    getSerialNumber,
+    hasData,
+    showSuccess,
+    showError,
+    refresh, // Get refresh function
+  } = useAdminListPage({
+    endpoints: {
+      list: adminEndpoints.menus.list,
+      create: adminEndpoints.menus.create,
+      update: (id) => adminEndpoints.menus.update(id),
+      delete: (id) => adminEndpoints.menus.delete(id),
+    },
+    messages: {
+      createSuccess: "Menu đã được tạo thành công",
+      updateSuccess: "Menu đã được cập nhật thành công",
+      deleteSuccess: "Menu đã được xóa thành công",
+      deleteError: "Không thể xóa menu",
+    },
+  });
+
   const [statusEnums, setStatusEnums] = useState<any[]>([]);
   const [parentMenus, setParentMenus] = useState<any[]>([]);
   const [permissions, setPermissions] = useState<any[]>([]);
-  const { showSuccess, showError } = useToastContext();
-
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = { page: pagination.page, ...filters };
-      const response = await api.get(adminEndpoints.menus.list, { params });
-      const data = response.data?.data || response.data || {};
-
-      if (Array.isArray(data)) {
-        setItems(data);
-      } else {
-        setItems(data.items || data.data || []);
-        if (data.pagination) {
-          setPagination({
-            page: data.pagination.page || 1,
-            totalPages: data.pagination.totalPages || 1,
-            totalItems: data.pagination.totalItems || 0,
-          });
-        }
-      }
-      setApiErrors({});
-    } catch (err: any) {
-      showError("Không thể tải danh sách menu");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.page, filters, showError]);
 
   const fetchEnums = useCallback(async () => {
     try {
       setStatusEnums([
-        { value: "active", label: "Hoạt động" },
-        { value: "inactive", label: "Ngừng hoạt động" },
+        { value: "active", label: "Hoạt động", class: "bg-green-100 text-green-800" },
+        { value: "inactive", label: "Ngừng hoạt động", class: "bg-gray-100 text-gray-800" },
       ]);
     } catch (e) {
       setStatusEnums([]);
@@ -107,6 +110,7 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
         setPermissions(response.data.data || []);
       } else {
         const data = response.data?.data || response.data || [];
+        // Handle different pagination structures if needed, or simple list
         setPermissions(Array.isArray(data) ? data : data.items || data.data || []);
       }
     } catch (e) {
@@ -118,90 +122,15 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
     fetchEnums();
   }, [fetchEnums]);
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  const handleFilterUpdate = (newFilters: Record<string, any>) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
+  // Hook into handleCreate/Update to refresh enums
+  const customHandleCreate = async (data: any) => {
+    await handleCreate(data);
+    fetchEnums();
   };
 
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  };
-
-  const openCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: true }));
-    setApiErrors({});
-  };
-
-  const closeCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: false }));
-    setApiErrors({});
-  };
-
-  const openEditModal = (item: Menu) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, edit: true }));
-    setApiErrors({});
-  };
-
-  const closeEditModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, edit: false }));
-    setApiErrors({});
-  };
-
-  const confirmDelete = (item: Menu) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, delete: true }));
-  };
-
-  const closeDeleteModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, delete: false }));
-  };
-
-  const handleMenuCreated = async (formData: any) => {
-    try {
-      await api.post(adminEndpoints.menus.create, formData);
-      showSuccess("Menu đã được tạo thành công");
-      closeCreateModal();
-      fetchItems();
-      fetchEnums(); // Refresh parent menus
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Không thể tạo menu");
-    }
-  };
-
-  const handleMenuUpdated = async (formData: any) => {
-    if (!selectedItem) return;
-    try {
-      await api.put(adminEndpoints.menus.update(selectedItem.id), formData);
-      showSuccess("Menu đã được cập nhật thành công");
-      closeEditModal();
-      fetchItems();
-      fetchEnums(); // Refresh parent menus
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Không thể cập nhật menu");
-    }
-  };
-
-  const deleteMenu = async () => {
-    if (!selectedItem) return;
-    try {
-      await api.delete(adminEndpoints.menus.delete(selectedItem.id));
-      showSuccess("Menu đã được xóa thành công");
-      closeDeleteModal();
-      fetchItems();
-    } catch (err: any) {
-      showError("Không thể xóa menu");
-    }
+  const customHandleUpdate = async (id: any, data: any) => {
+    await handleUpdate(id, data);
+    fetchEnums();
   };
 
   const restoreMenu = async (menu: Menu) => {
@@ -209,7 +138,7 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
       const response = await api.put(adminEndpoints.menus.restore(menu.id));
       if (response.data?.success) {
         showSuccess("Menu đã được khôi phục thành công");
-        fetchItems();
+        refresh();
       } else {
         showError("Không thể khôi phục menu");
       }
@@ -228,12 +157,6 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
     return found?.class || found?.badge_class || found?.color_class || "bg-gray-100 text-gray-800";
   };
 
-  const getSerialNumber = (index: number): number => {
-    return (pagination.page - 1) * 10 + index + 1;
-  };
-
-  const hasData = items.length > 0;
-
   return (
     <div className="admin-menus">
       <div className="flex justify-between items-center mb-6">
@@ -243,7 +166,7 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
         </button>
       </div>
 
-      <MenusFilter initialFilters={filters} statusEnums={statusEnums} parentMenus={parentMenus} onUpdateFilters={handleFilterUpdate} />
+      <MenusFilter initialFilters={filters} statusEnums={statusEnums} parentMenus={parentMenus} onUpdateFilters={updateFilters} />
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         {loading ? (
@@ -261,7 +184,7 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {items.map((menu, index) => (
+              {items.map((menu: Menu, index) => (
                 <tr key={menu.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getSerialNumber(index)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -306,7 +229,7 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
                       additionalActions={[
                         {
                           label: menu.deleted_at ? "Khôi phục" : "Xóa",
-                          action: () => (menu.deleted_at ? restoreMenu(menu) : confirmDelete(menu)),
+                          action: () => (menu.deleted_at ? restoreMenu(menu) : openDeleteModal(menu)),
                           icon: menu.deleted_at ? "refresh" : "trash",
                         },
                       ]}
@@ -326,7 +249,7 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
         )}
       </div>
 
-      {hasData && <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} onPageChange={handlePageChange} />}
+      {hasData && <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} onPageChange={changePage} />}
 
       {modals.create && (
         <CreateMenu
@@ -336,7 +259,7 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
           permissions={permissions}
           apiErrors={apiErrors}
           onClose={closeCreateModal}
-          onCreated={handleMenuCreated}
+          onCreated={customHandleCreate}
         />
       )}
 
@@ -349,17 +272,17 @@ export default function AdminMenus({ title = "Quản lý menu", createButtonText
           permissions={permissions}
           apiErrors={apiErrors}
           onClose={closeEditModal}
-          onUpdated={handleMenuUpdated}
+          onUpdated={(data) => customHandleUpdate(selectedItem.id, data)}
         />
       )}
 
-      {modals.delete && selectedItem && (
+      {selectedItem && (
         <ConfirmModal
           show={modals.delete}
           title="Xác nhận xóa"
-          message={`Bạn có chắc chắn muốn xóa menu ${selectedItem.name || ""}?`}
+          message={`Bạn có chắc chắn muốn xóa menu ${(selectedItem as Menu).name || ""}?`}
           onClose={closeDeleteModal}
-          onConfirm={deleteMenu}
+          onConfirm={() => handleDelete(selectedItem.id)}
         />
       )}
     </div>
