@@ -69,39 +69,39 @@ export function PublicHeader({
 
   // Navigation items
   const navigationItems = [
-    { name: "Trang chủ", path: "/", icon: "🏠" },
+    { name: "Trang chủ", path: "/", icon: "" },
     {
       name: "Dự án",
       path: "/home/projects",
-      icon: "🏗️",
+      icon: "",
       children: [
-        { name: "Dự án nổi bật", path: "/home/projects", icon: "⭐" },
-        { name: "Dự án đang thi công", path: "/home/projects?status=ongoing", icon: "🚧" },
-        { name: "Dự án đã hoàn thành", path: "/home/projects?status=completed", icon: "✅" },
+        { name: "Dự án nổi bật", path: "/home/projects", icon: "" },
+        { name: "Dự án đang thi công", path: "/home/projects?status=ongoing", icon: "" },
+        { name: "Dự án đã hoàn thành", path: "/home/projects?status=completed", icon: "" },
       ],
     },
     {
       name: "Dịch vụ",
       path: "/home/services",
-      icon: "🔧",
+      icon: "",
       children: [
-        { name: "Thiết kế xây dựng", path: "/home/services/design", icon: "📐" },
-        { name: "Thi công xây dựng", path: "/home/services/construction", icon: "🏗️" },
-        { name: "Giám sát thi công", path: "/home/services/supervision", icon: "👷" },
+        { name: "Thiết kế xây dựng", path: "/home/services/design", icon: "" },
+        { name: "Thi công xây dựng", path: "/home/services/construction", icon: "" },
+        { name: "Giám sát thi công", path: "/home/services/supervision", icon: "" },
       ],
     },
     {
       name: "Về chúng tôi",
       path: "/home/about",
-      icon: "ℹ️",
+      icon: "",
       children: [
-        { name: "Giới thiệu chung", path: "/home/about", icon: "🏢" },
-        { name: "Đội ngũ nhân sự", path: "/home/staff", icon: "👥" },
-        { name: "Chứng chỉ & Giấy phép", path: "/home/certificates", icon: "📜" },
+        { name: "Giới thiệu chung", path: "/home/about", icon: "" },
+        { name: "Đội ngũ nhân sự", path: "/home/staff", icon: "" },
+        { name: "Chứng chỉ & Giấy phép", path: "/home/certificates", icon: "" },
       ],
     },
-    { name: "Tin tức", path: "/home/posts", icon: "📰" },
-    { name: "Liên hệ", path: "/home/contact", icon: "📞" },
+    { name: "Tin tức", path: "/home/posts", icon: "" },
+    { name: "Liên hệ", path: "/home/contact", icon: "" },
   ];
 
   const isActive = (path: string) => pathname === path || pathname?.startsWith(path + "/");
