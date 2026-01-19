@@ -161,6 +161,7 @@ export default function RegisterPage() {
                   </span>
                 }
                 {...register("agreeTerms")}
+                required
               />
               {errors.agreeTerms && (
                 <p className="text-xs text-red-500">{errors.agreeTerms.message}</p>

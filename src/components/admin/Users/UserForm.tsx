@@ -172,6 +172,7 @@ export default function UserForm({
               {...register("username")}
               error={errors.username?.message}
               placeholder="Nhập tên đăng nhập"
+              required
             />
             <FormField
               label="Email"
@@ -179,6 +180,7 @@ export default function UserForm({
               {...register("email")}
               error={errors.email?.message}
               placeholder="example@domain.com"
+              required
             />
             <FormField
               label="Số điện thoại"
@@ -234,6 +236,7 @@ export default function UserForm({
               {...register("name")}
               error={errors.name?.message}
               placeholder="Nguyễn Văn A"
+              required
             />
             <Controller
               name="gender"

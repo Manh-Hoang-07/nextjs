@@ -104,6 +104,7 @@ export default function LoginPage() {
               {...register("email")}
               error={errors.email?.message}
               autocomplete="email"
+              required
             />
 
             <div className="relative">
@@ -114,6 +115,7 @@ export default function LoginPage() {
                 {...register("password")}
                 error={errors.password?.message}
                 autocomplete="current-password"
+                required
               />
               <button
                 type="button"

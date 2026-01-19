@@ -151,6 +151,7 @@ export default function PermissionForm({
               {...register("name")}
               placeholder="Ví dụ: Quản lý bài viết"
               error={errors.name?.message}
+              required
             />
 
             <Controller

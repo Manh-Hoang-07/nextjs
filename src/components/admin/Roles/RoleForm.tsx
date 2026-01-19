@@ -167,6 +167,7 @@ export default function RoleForm({
               {...register("name")}
               error={errors.name?.message}
               placeholder="Quản trị viên, Biên tập viên..."
+              required
             />
           </div>
         </section>

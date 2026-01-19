@@ -161,6 +161,7 @@ const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelect
             />
             <label htmlFor={fieldId} className="ml-3 block text-sm text-gray-700 cursor-pointer group-hover:text-gray-900 transition-colors">
               {checkboxLabel || label}
+              {required && <span className="text-red-500 ml-1">*</span>}
             </label>
           </div>
         );
