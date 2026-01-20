@@ -184,11 +184,17 @@ export default function AdminPosts({
                         onEdit={() => openEditModal(post)}
                         additionalActions={[
                           {
+                            label: "Xem bình luận",
+                            action: () => window.location.href = `/admin/post-comments?post_id=${post.id}`,
+                            icon: "message",
+                          },
+                          {
                             label: post.deleted_at ? "Khôi phục" : "Xóa",
                             action: () => (post.deleted_at ? restorePost(post) : openDeleteModal(post)),
                             icon: post.deleted_at ? "refresh" : "trash",
                           },
                         ]}
+
                       />
                     </td>
                   </tr>
