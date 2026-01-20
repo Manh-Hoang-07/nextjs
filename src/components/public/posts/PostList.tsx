@@ -193,10 +193,19 @@ export function PostList({ initialPosts, categories }: PostListProps) {
                                 </p>
 
                                 <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
-                                    <div className="flex flex-wrap gap-1">
-                                        {post.tags?.slice(0, 2).map(tag => (
-                                            <span key={tag.id} className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500">#{tag.name}</span>
-                                        ))}
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex flex-wrap gap-1">
+                                            {post.tags?.slice(0, 2).map(tag => (
+                                                <span key={tag.id} className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500">#{tag.name}</span>
+                                            ))}
+                                        </div>
+                                        <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            {post.view_count}
+                                        </span>
                                     </div>
 
                                     <Link

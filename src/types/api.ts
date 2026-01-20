@@ -117,12 +117,30 @@ export interface Post {
   content: string;
   cover_image: string | null;
   image?: string | null;
-  view_count: number;
+  published_at?: string;
+  view_count: number | string;
   primary_category?: Category;
+  categories?: Category[];
   tags?: Tag[];
   created_at?: string;
   author?: {
     name: string;
     avatar?: string;
   };
+}
+
+export interface PostComment {
+  id: string;
+  post_id: string;
+  user_id?: string;
+  parent_id?: string;
+  content: string;
+  status: 'visible' | 'hidden';
+  created_at: string;
+  user?: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  replies?: PostComment[];
 }

@@ -5,6 +5,7 @@ import { publicEndpoints } from "@/lib/api/endpoints";
 import { Post } from "@/types/api";
 import { notFound } from "next/navigation";
 import { ShareButton } from "@/components/ui/navigation/ShareButton";
+import { PostComments } from "@/components/public/posts/PostComments";
 import { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -113,6 +114,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
               dangerouslySetInnerHTML={{ __html: post.content || post.description || post.excerpt || "" }}
             />
           </div>
+
+          {/* Comments Section */}
+          <PostComments postId={post.id} />
 
           {/* Footer Actions */}
           <div className="pt-8 border-t border-gray-100 flex justify-between items-center">
