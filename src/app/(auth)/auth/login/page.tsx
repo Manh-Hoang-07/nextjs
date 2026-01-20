@@ -171,7 +171,13 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+                window.location.href = `${apiUrl}/api/auth/google`;
+              }}
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+            >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M22.56 12.25c0-1.35-1.1-2.44-2.44-2.44H4.44c-1.34 0-2.44 1.09-2.44 2.44v4.44c0 1.35 1.1 2.44 2.44h15.12c1.34 0 2.44-1.09 2.44-2.44v-4.44z" />
                 <path d="M15.67 10.43c0-1.35-1.1-2.44-2.44-2.44H8.33c-1.34 0-2.44 1.09-2.44 2.44v4.44c0 1.35 1.1 2.44 2.44h4.89c1.35 0 2.44-1.09 2.44-2.44v-4.44z" />
