@@ -191,6 +191,7 @@ export default function BirthdayContent() {
                         className="hero-img"
                         fill
                         priority
+                        quality={100}
                         sizes="100vw"
                         style={{ objectFit: 'cover' }}
                     />
@@ -225,7 +226,7 @@ export default function BirthdayContent() {
                 <div className="timeline-line"></div>
                 <div className="milestone reveal-left">
                     <div className="milestone-image" onClick={() => openModal(1)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_2.jpg" alt="Sleeping Baby" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_2.jpg" alt="Sleeping Baby" fill priority quality={95} sizes="(max-width: 768px) 100vw, 70vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">01</span>
@@ -235,7 +236,7 @@ export default function BirthdayContent() {
                 </div>
                 <div className="milestone reveal-right alt">
                     <div className="milestone-image" onClick={() => openModal(2)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_3.jpg" alt="First Steps" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_3.jpg" alt="First Steps" fill priority quality={95} sizes="(max-width: 768px) 100vw, 70vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">02</span>
@@ -245,7 +246,7 @@ export default function BirthdayContent() {
                 </div>
                 <div className="milestone reveal-left">
                     <div className="milestone-image" onClick={() => openModal(3)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_4.jpg" alt="Birthday Cake" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_4.jpg" alt="Birthday Cake" fill quality={95} sizes="(max-width: 768px) 100vw, 70vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">03</span>
@@ -255,7 +256,7 @@ export default function BirthdayContent() {
                 </div>
                 <div className="milestone reveal-right alt">
                     <div className="milestone-image" onClick={() => openModal(4)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_5.jpg" alt="Family Time" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_5.jpg" alt="Family Time" fill quality={95} sizes="(max-width: 768px) 100vw, 70vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">04</span>
@@ -265,7 +266,7 @@ export default function BirthdayContent() {
                 </div>
                 <div className="milestone reveal-left">
                     <div className="milestone-image" onClick={() => openModal(5)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_6.jpg" alt="Birthday Celebration" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_6.jpg" alt="Birthday Celebration" fill quality={95} sizes="(max-width: 768px) 100vw, 70vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">05</span>
@@ -286,23 +287,23 @@ export default function BirthdayContent() {
 
             <section className="gallery-section">
                 <div className="gallery-grid">
-                    <div className="gallery-item wide reveal" onClick={() => openModal(6)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_7.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                    <div className="gallery-item wide reveal-left" onClick={() => openModal(6)} style={{ position: 'relative' }}>
+                        <Image src="/images/baby_7.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 100vw, 70vw" style={{ objectFit: 'cover' }} />
                     </div>
-                    <div className="gallery-item tall reveal" onClick={() => openModal(7)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_8.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 100vw, 33vw" style={{ objectFit: 'cover' }} />
+                    <div className="gallery-item tall reveal-right" onClick={() => openModal(7)} style={{ position: 'relative' }}>
+                        <Image src="/images/baby_8.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 100vw, 40vw" style={{ objectFit: 'cover' }} />
                     </div>
-                    <div className="gallery-item reveal" onClick={() => openModal(8)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_9.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
+                    <div className="gallery-item reveal-left" onClick={() => openModal(8)} style={{ position: 'relative' }}>
+                        <Image src="/images/baby_9.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 50vw, 30vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="gallery-item reveal" onClick={() => openModal(9)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_10.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_10.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 50vw, 30vw" style={{ objectFit: 'cover' }} />
                     </div>
-                    <div className="gallery-item reveal" onClick={() => openModal(10)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_11.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
+                    <div className="gallery-item reveal-right" onClick={() => openModal(10)} style={{ position: 'relative' }}>
+                        <Image src="/images/baby_11.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 50vw, 30vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="gallery-item wide reveal" onClick={() => openModal(11)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_12.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_12.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 100vw, 70vw" style={{ objectFit: 'cover' }} />
                     </div>
                 </div>
             </section>
@@ -311,7 +312,7 @@ export default function BirthdayContent() {
                 <div className="mosaic-grid">
                     {images.slice(12, 20).map((img, idx) => (
                         <div key={idx} className="mosaic-item reveal" onClick={() => openModal(12 + idx)} style={{ position: 'relative' }}>
-                            <Image src={img.src} alt={img.alt} fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
+                            <Image src={img.src} alt={img.alt} fill quality={90} sizes="(max-width: 768px) 50vw, 30vw" style={{ objectFit: 'cover' }} />
                         </div>
                     ))}
                 </div>
@@ -319,17 +320,17 @@ export default function BirthdayContent() {
 
             <section className="gallery-section" style={{ paddingTop: 0 }}>
                 <div className="gallery-grid">
-                    <div className="gallery-item reveal" onClick={() => openModal(20)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_3.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 100vw, 25vw" style={{ objectFit: 'cover' }} />
+                    <div className="gallery-item reveal-left" onClick={() => openModal(20)} style={{ position: 'relative' }}>
+                        <Image src="/images/baby_3.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 100vw, 30vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="gallery-item tall reveal" onClick={() => openModal(21)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_4.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 100vw, 25vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_4.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 100vw, 30vw" style={{ objectFit: 'cover' }} />
                     </div>
-                    <div className="gallery-item wide reveal" onClick={() => openModal(22)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_5.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                    <div className="gallery-item wide reveal-right" onClick={() => openModal(22)} style={{ position: 'relative' }}>
+                        <Image src="/images/baby_5.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 100vw, 70vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="gallery-item reveal" onClick={() => openModal(23)} style={{ position: 'relative' }}>
-                        <Image src="/images/baby_6.jpg" alt="Gia Huy Moment" fill sizes="(max-width: 768px) 100vw, 25vw" style={{ objectFit: 'cover' }} />
+                        <Image src="/images/baby_6.jpg" alt="Gia Huy Moment" fill quality={90} sizes="(max-width: 768px) 100vw, 30vw" style={{ objectFit: 'cover' }} />
                     </div>
                 </div>
             </section>

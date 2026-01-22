@@ -826,6 +826,8 @@
 .birthday-page .gallery-item img,
 .birthday-page .mosaic-item img {
     cursor: zoom-in;
+    image-rendering: -webkit-optimize-contrast;
+    /* Sharpen images on Chrome/Safari */
 }
 
 @media (max-width: 700px) {
