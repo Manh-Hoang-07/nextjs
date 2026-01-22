@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import api from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import { useAdminListPage } from "@/hooks/useAdminListPage";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import ConfirmModal from "@/components/ui/ConfirmModal";
-import Actions from "@/components/ui/Actions";
-import Pagination from "@/components/ui/Pagination";
+import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
+import ConfirmModal from "@/components/ui/feedback/ConfirmModal";
+import Actions from "@/components/ui/data-display/Actions";
+import Pagination from "@/components/ui/data-display/Pagination";
 import PostsFilter from "./PostsFilter";
 import CreatePost from "./CreatePost";
 import EditPost from "./EditPost";
@@ -184,11 +184,17 @@ export default function AdminPosts({
                         onEdit={() => openEditModal(post)}
                         additionalActions={[
                           {
+                            label: "Xem bình luận",
+                            action: () => window.location.href = `/admin/post-comments?post_id=${post.id}`,
+                            icon: "message",
+                          },
+                          {
                             label: post.deleted_at ? "Khôi phục" : "Xóa",
                             action: () => (post.deleted_at ? restorePost(post) : openDeleteModal(post)),
                             icon: post.deleted_at ? "refresh" : "trash",
                           },
                         ]}
+
                       />
                     </td>
                   </tr>

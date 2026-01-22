@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import api from "@/lib/api/client";
+import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
-import { useToastContext } from "@/contexts/ToastContext";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import ConfirmModal from "@/components/ui/ConfirmModal";
-import Actions from "@/components/ui/Actions";
-import Pagination from "@/components/ui/Pagination";
+import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
+import ConfirmModal from "@/components/ui/feedback/ConfirmModal";
+import Actions from "@/components/ui/data-display/Actions";
+import Pagination from "@/components/ui/data-display/Pagination";
 import WarehousesFilter from "./WarehousesFilter";
 import CreateWarehouse from "./CreateWarehouse";
 import EditWarehouse from "./EditWarehouse";
@@ -36,136 +34,46 @@ export default function AdminWarehouses({
   createButtonText = "Thêm kho mới",
 }: AdminWarehousesProps) {
   const router = useRouter();
-  const [items, setItems] = useState<Warehouse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [apiErrors, setApiErrors] = useState<Record<string, any>>({});
-  const [modals, setModals] = useState({ create: false, edit: false, delete: false });
-  const [selectedItem, setSelectedItem] = useState<Warehouse | null>(null);
-  const { showSuccess, showError } = useToastContext();
-
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = { page: pagination.page, ...filters };
-      const response = await api.get(adminEndpoints.warehouses.list, { params });
-      const data = response.data?.data || response.data || {};
-
-      if (Array.isArray(data)) {
-        setItems(data);
-      } else {
-        setItems(data.items || data.data || []);
-        if (data.pagination) {
-          setPagination({
-            page: data.pagination.page || 1,
-            totalPages: data.pagination.totalPages || 1,
-            totalItems: data.pagination.totalItems || 0,
-          });
-        }
-      }
-      setApiErrors({});
-    } catch (err: any) {
-      showError("Không thể tải danh sách kho hàng");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.page, filters, showError]);
-
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  const handleFilterUpdate = (newFilters: Record<string, any>) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  };
-
-  const openCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: true }));
-    setApiErrors({});
-  };
-
-  const closeCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: false }));
-    setApiErrors({});
-  };
-
-  const openEditModal = (item: Warehouse) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, edit: true }));
-    setApiErrors({});
-  };
-
-  const closeEditModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, edit: false }));
-    setApiErrors({});
-  };
-
-  const confirmDelete = (item: Warehouse) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, delete: true }));
-  };
-
-  const closeDeleteModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, delete: false }));
-  };
-
-  const handleWarehouseCreated = async (formData: any) => {
-    try {
-      await api.post(adminEndpoints.warehouses.create, formData);
-      showSuccess("Kho hàng đã được tạo thành công");
-      closeCreateModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Không thể tạo kho hàng");
-    }
-  };
-
-  const handleWarehouseUpdated = async (formData: any) => {
-    if (!selectedItem) return;
-    try {
-      await api.put(adminEndpoints.warehouses.update(selectedItem.id), formData);
-      showSuccess("Kho hàng đã được cập nhật thành công");
-      closeEditModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Không thể cập nhật kho hàng");
-    }
-  };
-
-  const deleteWarehouse = async () => {
-    if (!selectedItem) return;
-    try {
-      await api.delete(adminEndpoints.warehouses.delete(selectedItem.id));
-      showSuccess("Kho hàng đã được xóa thành công");
-      closeDeleteModal();
-      fetchItems();
-    } catch (err: any) {
-      showError("Không thể xóa kho hàng");
-    }
-  };
+  const {
+    items,
+    loading,
+    pagination,
+    filters,
+    apiErrors,
+    modals,
+    selectedItem,
+    openCreateModal,
+    closeCreateModal,
+    openEditModal,
+    closeEditModal,
+    openDeleteModal,
+    closeDeleteModal,
+    updateFilters,
+    changePage,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    getSerialNumber,
+    hasData,
+  } = useAdminListPage({
+    endpoints: {
+      list: adminEndpoints.warehouses.list,
+      create: adminEndpoints.warehouses.create,
+      update: (id) => adminEndpoints.warehouses.update(id),
+      delete: (id) => adminEndpoints.warehouses.delete(id),
+      show: (id) => adminEndpoints.warehouses.show(id),
+    },
+    messages: {
+      createSuccess: "Kho hàng đã được tạo thành công",
+      updateSuccess: "Kho hàng đã được cập nhật thành công",
+      deleteSuccess: "Kho hàng đã được xóa thành công",
+    },
+    fetchDetailBeforeEdit: true,
+  });
 
   const viewInventory = (warehouse: Warehouse) => {
     router.push(`/admin/warehouses/${warehouse.id}/inventory`);
   };
-
-  const getSerialNumber = (index: number): number => {
-    return (pagination.page - 1) * 10 + index + 1;
-  };
-
-  const hasData = items.length > 0;
 
   return (
     <div className="admin-warehouses">
@@ -179,7 +87,7 @@ export default function AdminWarehouses({
         </button>
       </div>
 
-      <WarehousesFilter initialFilters={filters} onUpdateFilters={handleFilterUpdate} />
+      <WarehousesFilter initialFilters={filters} onUpdateFilters={updateFilters} />
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         {loading ? (
@@ -200,7 +108,7 @@ export default function AdminWarehouses({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {items.map((warehouse, index) => (
+                {items.map((warehouse: Warehouse, index) => (
                   <tr key={warehouse.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getSerialNumber(index)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -242,7 +150,7 @@ export default function AdminWarehouses({
                           },
                           {
                             label: "Xóa",
-                            action: () => confirmDelete(warehouse),
+                            action: () => openDeleteModal(warehouse),
                             icon: "trash",
                           },
                         ]}
@@ -268,28 +176,27 @@ export default function AdminWarehouses({
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
           totalItems={pagination.totalItems}
-          onPageChange={handlePageChange}
+          onPageChange={changePage}
         />
       )}
 
       {modals.create && (
-        <CreateWarehouse show={modals.create} apiErrors={apiErrors} onClose={closeCreateModal} onCreated={handleWarehouseCreated} />
+        <CreateWarehouse show={modals.create} apiErrors={apiErrors} onClose={closeCreateModal} onCreated={handleCreate} />
       )}
 
       {modals.edit && selectedItem && (
-        <EditWarehouse show={modals.edit} warehouse={selectedItem} apiErrors={apiErrors} onClose={closeEditModal} onUpdated={handleWarehouseUpdated} />
+        <EditWarehouse show={modals.edit} warehouse={selectedItem} apiErrors={apiErrors} onClose={closeEditModal} onUpdated={(data) => handleUpdate(selectedItem.id, data)} />
       )}
 
-      {modals.delete && selectedItem && (
+      {selectedItem && (
         <ConfirmModal
           show={modals.delete}
           title="Xác nhận xóa"
-          message={`Bạn có chắc chắn muốn xóa kho ${selectedItem.name || ""}?`}
+          message={`Bạn có chắc chắn muốn xóa kho ${(selectedItem as Warehouse).name || ""}?`}
           onClose={closeDeleteModal}
-          onConfirm={deleteWarehouse}
+          onConfirm={() => handleDelete(selectedItem.id)}
         />
       )}
     </div>
   );
 }
-

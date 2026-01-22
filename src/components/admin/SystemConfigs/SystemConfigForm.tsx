@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
-import FormField from "@/components/ui/FormField";
-import ImageUploader from "@/components/ui/ImageUploader";
+import FormField from "@/components/ui/forms/FormField";
+import ImageUploader from "@/components/ui/forms/ImageUploader";
 import { api } from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import { useToastContext } from "@/contexts/ToastContext";
@@ -26,6 +26,7 @@ export default function SystemConfigForm({ group, fields }: SystemConfigFormProp
     const { data: configData, loading, refresh } = useSystemConfig(group, { isAdmin: true, enableCache: false });
     const { showSuccess, showError } = useToastContext();
     const [formData, setFormData] = useState<Record<string, any>>({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -35,14 +36,44 @@ export default function SystemConfigForm({ group, fields }: SystemConfigFormProp
     }, [configData]);
 
     const handleChange = (key: string, value: any) => {
-        setFormData((prev) => ({
+        setFormData((prev: any) => ({
             ...prev,
             [key]: value,
         }));
+        // Clear error when field changes
+        if (errors[key]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[key];
+                return newErrors;
+            });
+        }
+    };
+
+    const validate = () => {
+        const newErrors: Record<string, string> = {};
+        fields.forEach(field => {
+            const value = formData[field.key];
+            if (field.type === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                newErrors[field.key] = "Email không hợp lệ";
+            }
+            if (field.type === "number" && value && isNaN(Number(value))) {
+                newErrors[field.key] = "Giá trị phải là số";
+            }
+            // Add more common validations here if needed
+        });
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!validate()) {
+            showError("Vui lòng kiểm tra lại thông tin");
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -91,6 +122,7 @@ export default function SystemConfigForm({ group, fields }: SystemConfigFormProp
                                     onChange={(value) => handleChange(field.key, value)}
                                     onRemove={() => handleChange(field.key, null)}
                                 />
+                                {errors[field.key] && <p className="text-sm text-red-500">{errors[field.key]}</p>}
                             </div>
                         ) : field.type === "custom" && field.component ? (
                             <field.component
@@ -104,6 +136,7 @@ export default function SystemConfigForm({ group, fields }: SystemConfigFormProp
                                 value={field.type === "checkbox" ? !!formData[field.key] : formData[field.key] ?? ""}
                                 placeholder={field.placeholder}
                                 helpText={field.description}
+                                error={errors[field.key]}
                                 onChange={(e) => {
                                     const value = field.type === "checkbox" ? e.target.checked : e.target.value;
                                     handleChange(field.key, value);

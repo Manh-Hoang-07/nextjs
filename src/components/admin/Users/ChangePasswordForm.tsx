@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Modal from "@/components/ui/Modal";
-import FormWrapper from "@/components/ui/FormWrapper";
-import FormField from "@/components/ui/FormField";
+import Modal from "@/components/ui/feedback/Modal";
+import FormWrapper from "@/components/ui/forms/FormWrapper";
+import FormField from "@/components/ui/forms/FormField";
 
 interface ChangePasswordFormProps {
   show: boolean;

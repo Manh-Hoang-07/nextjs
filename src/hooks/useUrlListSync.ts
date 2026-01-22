@@ -65,9 +65,10 @@ export function useUrlListSync<T extends { id: any } = any>(config: {
         setPagination((prev) => ({
           page: meta.page ?? meta.current_page ?? prev.page,
           totalPages:
-            meta.totalPages ?? meta.last_page ?? prev.totalPages,
+            meta.totalPages ?? meta.lastPage ?? meta.last_page ?? prev.totalPages,
           limit: meta.limit ?? meta.per_page ?? prev.limit,
           totalItems: meta.totalItems ?? meta.total ?? prev.totalItems,
+
         }));
       }
     } catch (err: any) {

@@ -16,6 +16,8 @@ export const adminEndpoints = {
         show: (id: Id) => `/api/admin/posts/${id}`,
         update: (id: Id) => `/api/admin/posts/${id}`,
         delete: (id: Id) => `/api/admin/posts/${id}`,
+        stats: (id: Id) => `/api/admin/posts/${id}/stats`,
+        overview: "/api/admin/posts/statistics/overview",
     },
     postCategories: {
         list: "/api/admin/post-categories",
@@ -185,4 +187,10 @@ export const adminEndpoints = {
         getByGroup: (group: string) => `/api/admin/system-configs/${group}`,
         update: (group: string) => `/api/admin/system-configs/${group}`,
     },
+    postComments: {
+        list: "/api/admin/post-comments",
+        updateStatus: (id: Id) => `/api/admin/post-comments/${id}/status`,
+        delete: (id: Id) => `/api/admin/post-comments/${id}`,
+    },
 } as const;
+

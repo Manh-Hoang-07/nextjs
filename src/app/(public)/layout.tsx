@@ -1,7 +1,7 @@
 import { getSystemConfig } from "@/lib/api/public";
 import { PublicHeader } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
-import { PublicLayoutWrapper } from "@/components/layout/PublicLayoutWrapper";
+import { PublicLayoutWrapper } from "@/components/layout/public/PublicLayoutWrapper";
 
 export default async function PublicLayout({
   children,

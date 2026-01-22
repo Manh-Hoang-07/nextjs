@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/Button";
-import FormField from "@/components/ui/FormField";
-import Modal from "@/components/ui/Modal";
+import { Button } from "@/components/ui/navigation/Button";
+import FormField from "@/components/ui/forms/FormField";
+import Modal from "@/components/ui/feedback/Modal";
 
 interface UserProfile {
     id: string;

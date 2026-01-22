@@ -1,9 +1,9 @@
-import { PageBanner } from "@/components/ui/PageBanner";
+import { PageBanner } from "@/components/ui/navigation/PageBanner";
 import { serverFetch } from "@/lib/api/server-client";
 import { publicEndpoints } from "@/lib/api/endpoints";
-import { ProjectFilter } from "@/components/projects/ProjectFilter";
+import { ProjectFilter } from "@/components/public/projects/ProjectFilter";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/navigation/Button";
 import { Suspense } from "react";
 import { Metadata } from "next";
 

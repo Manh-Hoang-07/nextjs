@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import api from "@/lib/api/client";
+import { useState, useEffect } from "react";
+import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
-import { useToastContext } from "@/contexts/ToastContext";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import ConfirmModal from "@/components/ui/ConfirmModal";
-import Actions from "@/components/ui/Actions";
-import Pagination from "@/components/ui/Pagination";
+import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
+import ConfirmModal from "@/components/ui/feedback/ConfirmModal";
+import Actions from "@/components/ui/data-display/Actions";
+import Pagination from "@/components/ui/data-display/Pagination";
 import BannerLocationsFilter from "./BannerLocationsFilter";
 import CreateBannerLocation from "./CreateBannerLocation";
 import EditBannerLocation from "./EditBannerLocation";
 
 const getBasicStatusArray = () => [
-  { value: "active", label: "Hoạt động" },
-  { value: "inactive", label: "Ngừng hoạt động" },
+  { value: "active", label: "Hoạt động", class: "bg-green-100 text-green-800" },
+  { value: "inactive", label: "Ngừng hoạt động", class: "bg-gray-100 text-gray-800" },
 ];
 
 const getStatusLabel = (value: string): string => {
@@ -23,11 +22,8 @@ const getStatusLabel = (value: string): string => {
 };
 
 const getStatusClass = (value: string): string => {
-  const classes: Record<string, string> = {
-    active: "bg-green-100 text-green-800",
-    inactive: "bg-gray-100 text-gray-800",
-  };
-  return classes[value] || "bg-gray-100 text-gray-800";
+  const status = getBasicStatusArray().find((s) => s.value === value);
+  return status?.class || "bg-gray-100 text-gray-800";
 };
 
 interface BannerLocation {
@@ -48,151 +44,46 @@ export default function AdminBannerLocations({
   title = "Quản lý vị trí banner",
   createButtonText = "Thêm vị trí mới",
 }: AdminBannerLocationsProps) {
-  const [items, setItems] = useState<BannerLocation[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    totalPages: 1,
-    totalItems: 0,
+  const {
+    items,
+    loading,
+    pagination,
+    filters,
+    apiErrors,
+    modals,
+    selectedItem,
+    openCreateModal,
+    closeCreateModal,
+    openEditModal,
+    closeEditModal,
+    openDeleteModal,
+    closeDeleteModal,
+    updateFilters,
+    changePage,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    getSerialNumber,
+    hasData,
+  } = useAdminListPage({
+    endpoints: {
+      list: adminEndpoints.bannerLocations.list,
+      create: adminEndpoints.bannerLocations.create,
+      update: (id) => adminEndpoints.bannerLocations.update(id),
+      delete: (id) => adminEndpoints.bannerLocations.delete(id),
+    },
+    messages: {
+      createSuccess: "Đã tạo thành công",
+      updateSuccess: "Đã cập nhật thành công",
+      deleteSuccess: "Đã xóa thành công",
+    },
   });
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [apiErrors, setApiErrors] = useState<Record<string, any>>({});
-  const [modals, setModals] = useState({
-    create: false,
-    edit: false,
-    delete: false,
-  });
-  const [selectedItem, setSelectedItem] = useState<BannerLocation | null>(null);
+
   const [statusEnums, setStatusEnums] = useState<Array<{ value: string; label?: string; name?: string }>>([]);
-  const { showSuccess, showError } = useToastContext();
-
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page: pagination.page,
-        ...filters,
-      };
-
-      const response = await api.get(adminEndpoints.bannerLocations.list, { params });
-      const data = response.data?.data || response.data || {};
-
-      if (Array.isArray(data)) {
-        setItems(data);
-      } else {
-        setItems(data.items || data.data || []);
-        if (data.pagination) {
-          setPagination({
-            page: data.pagination.page || 1,
-            totalPages: data.pagination.totalPages || 1,
-            totalItems: data.pagination.totalItems || 0,
-          });
-        }
-      }
-      setApiErrors({});
-    } catch (err: any) {
-      showError("Không thể tải danh sách");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.page, filters, showError]);
 
   useEffect(() => {
     setStatusEnums(getBasicStatusArray());
   }, []);
-
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  const handleFilterUpdate = (newFilters: Record<string, any>) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  };
-
-  const openCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: true }));
-    setApiErrors({});
-  };
-
-  const closeCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: false }));
-    setApiErrors({});
-  };
-
-  const openEditModal = (item: BannerLocation) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, edit: true }));
-    setApiErrors({});
-  };
-
-  const closeEditModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, edit: false }));
-    setApiErrors({});
-  };
-
-  const confirmDelete = (item: BannerLocation) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, delete: true }));
-  };
-
-  const closeDeleteModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, delete: false }));
-  };
-
-  const handleCreated = async (formData: any) => {
-    try {
-      await api.post(adminEndpoints.bannerLocations.create, formData);
-      showSuccess("Đã tạo thành công");
-      closeCreateModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Không thể tạo vị trí banner");
-    }
-  };
-
-  const handleUpdated = async (formData: any) => {
-    if (!selectedItem) return;
-
-    try {
-      await api.put(adminEndpoints.bannerLocations.update(selectedItem.id), formData);
-      showSuccess("Đã cập nhật thành công");
-      closeEditModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Không thể cập nhật vị trí banner");
-    }
-  };
-
-  const deleteLocation = async () => {
-    if (!selectedItem) return;
-
-    try {
-      await api.delete(adminEndpoints.bannerLocations.delete(selectedItem.id));
-      showSuccess("Đã xóa thành công");
-      closeDeleteModal();
-      fetchItems();
-    } catch (err: any) {
-      showError("Không thể xóa vị trí banner");
-    }
-  };
-
-  const getSerialNumber = (index: number): number => {
-    return (pagination.page - 1) * 10 + index + 1;
-  };
-
-  const hasData = items.length > 0;
 
   return (
     <div className="admin-banner-locations">
@@ -209,7 +100,7 @@ export default function AdminBannerLocations({
       <BannerLocationsFilter
         initialFilters={filters}
         statusEnums={statusEnums}
-        onUpdateFilters={handleFilterUpdate}
+        onUpdateFilters={updateFilters}
       />
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -237,7 +128,7 @@ export default function AdminBannerLocations({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {items.map((location, index) => (
+              {items.map((location: BannerLocation, index) => (
                 <tr key={location.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {getSerialNumber(index)}
@@ -279,7 +170,7 @@ export default function AdminBannerLocations({
                         },
                         {
                           label: location.deleted_at ? "Khôi phục" : "Xóa",
-                          action: () => confirmDelete(location),
+                          action: () => openDeleteModal(location),
                           icon: location.deleted_at ? "refresh" : "trash",
                         },
                       ]}
@@ -297,7 +188,7 @@ export default function AdminBannerLocations({
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
           totalItems={pagination.totalItems}
-          onPageChange={handlePageChange}
+          onPageChange={changePage}
         />
       )}
 
@@ -307,7 +198,7 @@ export default function AdminBannerLocations({
           statusEnums={statusEnums}
           apiErrors={apiErrors}
           onClose={closeCreateModal}
-          onCreated={handleCreated}
+          onCreated={handleCreate}
         />
       )}
 
@@ -318,20 +209,19 @@ export default function AdminBannerLocations({
           statusEnums={statusEnums}
           apiErrors={apiErrors}
           onClose={closeEditModal}
-          onUpdated={handleUpdated}
+          onUpdated={(data) => handleUpdate(selectedItem.id, data)}
         />
       )}
 
-      {modals.delete && selectedItem && (
+      {selectedItem && (
         <ConfirmModal
           show={modals.delete}
           title="Xác nhận xóa"
-          message={`Bạn có chắc chắn muốn xóa vị trí ${selectedItem.name || ""}?`}
+          message={`Bạn có chắc chắn muốn xóa vị trí ${(selectedItem as BannerLocation).name || ""}?`}
           onClose={closeDeleteModal}
-          onConfirm={deleteLocation}
+          onConfirm={() => handleDelete(selectedItem.id)}
         />
       )}
     </div>
   );
 }
-

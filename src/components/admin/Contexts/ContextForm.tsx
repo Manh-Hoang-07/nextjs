@@ -4,16 +4,15 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
 
-// 1. Define Context Schema
 const contextSchema = z.object({
   type: z.string().min(1, "Loại context là bắt buộc").max(100, "Loại context tối đa 100 ký tự"),
   code: z.string().max(100, "Mã code tối đa 100 ký tự").optional().nullable(),
   name: z.string().min(1, "Tên context là bắt buộc").max(255, "Tên context tối đa 255 ký tự"),
-  status: z.string().default("active"),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
 });
 
 type ContextFormValues = z.infer<typeof contextSchema>;

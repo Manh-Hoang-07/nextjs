@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import AdminFilter from "../Filter/AdminFilter";
-import SelectFilter from "@/components/ui/SelectFilter";
+import SelectFilter from "@/components/ui/filters/SelectFilter";
 
 const getBasicStatusArray = () => [
   { value: "active", label: "Hoạt động" },

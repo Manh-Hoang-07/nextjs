@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import FormField from "@/components/ui/FormField";
-import ImageUploader from "@/components/ui/ImageUploader";
+import FormField from "@/components/ui/forms/FormField";
+import ImageUploader from "@/components/ui/forms/ImageUploader";
 
 interface ContactChannel {
     type: string;

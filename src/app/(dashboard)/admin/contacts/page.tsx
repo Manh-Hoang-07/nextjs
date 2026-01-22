@@ -1,5 +1,6 @@
 import { Metadata } from "next";
-import PageMeta from "@/components/ui/PageMeta";
+import PageMeta from "@/components/ui/navigation/PageMeta";
+import AdminContacts from "@/components/admin/Contacts/AdminContacts";
 
 export const metadata: Metadata = {
   title: "Quản lý Liên hệ | Admin",
@@ -16,9 +17,7 @@ export default function AdminContactsPage() {
           { label: "Liên hệ" },
         ]}
       />
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <p className="text-gray-500">Admin contacts component needed</p>
-      </div>
+      <AdminContacts />
     </div>
   );
 }

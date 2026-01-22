@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Modal from "@/components/ui/Modal";
-import FormWrapper from "@/components/ui/FormWrapper";
-import MultipleSelect from "@/components/ui/MultipleSelect";
+import Modal from "@/components/ui/feedback/Modal";
+import FormWrapper from "@/components/ui/forms/FormWrapper";
+import MultipleSelect from "@/components/ui/forms/MultipleSelect";
 import api from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
 

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import DataTable from "@/components/ui/DataTable";
-import { Button } from "@/components/ui/Button";
-import FormField from "@/components/ui/FormField";
-import Modal from "@/components/ui/Modal";
+import DataTable from "@/components/ui/data-display/DataTable";
+import { Button } from "@/components/ui/navigation/Button";
+import FormField from "@/components/ui/forms/FormField";
+import Modal from "@/components/ui/feedback/Modal";
 
 interface Post {
   id: string;

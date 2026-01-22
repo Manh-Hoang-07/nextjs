@@ -1,7 +1,7 @@
-import { PageBanner } from "@/components/ui/PageBanner";
+import { PageBanner } from "@/components/ui/navigation/PageBanner";
 
 import { publicEndpoints } from "@/lib/api/endpoints";
-import { PostList } from "@/components/posts/PostList";
+import { PostList } from "@/components/public/posts/PostList";
 
 import { serverFetch } from "@/lib/api/server-client";
 import { Metadata } from "next";

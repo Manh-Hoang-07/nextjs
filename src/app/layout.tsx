@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/contexts/ToastContext";
-import ToastContainer from "@/components/ui/ToastContainer";
-import { NavigationProgress } from "@/components/ui/NavigationProgress";
+import ToastContainer from "@/components/ui/feedback/ToastContainer";
+import { NavigationProgress } from "@/components/ui/navigation/NavigationProgress";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

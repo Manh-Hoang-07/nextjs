@@ -17,6 +17,11 @@ interface User {
   permissions?: string[];
   status?: string;
   avatar?: string;
+  image?: string;
+  birthday?: string;
+  gender?: string;
+  address?: string;
+  about?: string;
   created_at?: string;
   updated_at?: string;
 }

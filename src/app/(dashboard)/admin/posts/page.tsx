@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
 import AdminPosts from "@/components/admin/Posts/AdminPosts";
-import PageMeta from "@/components/ui/PageMeta";
+import PageMeta from "@/components/ui/navigation/PageMeta";
 
 export const metadata: Metadata = {
   title: "Quản lý bài viết | Admin",

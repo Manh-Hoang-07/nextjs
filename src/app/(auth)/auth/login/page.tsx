@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/Button";
-import FormField from "@/components/ui/FormField";
+import { Button } from "@/components/ui/navigation/Button";
+import FormField from "@/components/ui/forms/FormField";
 import { useAuthStore } from "@/lib/store/authStore";
 
 // 1. Khai báo schema validate (Declarative Validation)
 const loginSchema = z.object({
-  email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ"),
-  password: z.string().min(1, "Mật khẩu là bắt buộc").min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-  rememberMe: z.boolean().optional(),
+  email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ").max(255, "Email quá dài"),
+  password: z.string().min(1, "Mật khẩu là bắt buộc").min(6, "Mật khẩu phải có ít nhất 6 ký tự").max(100, "Mật khẩu quá dài"),
+  rememberMe: z.boolean().default(false),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -104,6 +104,7 @@ export default function LoginPage() {
               {...register("email")}
               error={errors.email?.message}
               autocomplete="email"
+              required
             />
 
             <div className="relative">
@@ -114,6 +115,7 @@ export default function LoginPage() {
                 {...register("password")}
                 error={errors.password?.message}
                 autocomplete="current-password"
+                required
               />
               <button
                 type="button"
@@ -169,7 +171,13 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+                window.location.href = `${apiUrl}/api/auth/google`;
+              }}
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+            >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M22.56 12.25c0-1.35-1.1-2.44-2.44-2.44H4.44c-1.34 0-2.44 1.09-2.44 2.44v4.44c0 1.35 1.1 2.44 2.44h15.12c1.34 0 2.44-1.09 2.44-2.44v-4.44z" />
                 <path d="M15.67 10.43c0-1.35-1.1-2.44-2.44-2.44H8.33c-1.34 0-2.44 1.09-2.44 2.44v4.44c0 1.35 1.1 2.44 2.44h4.89c1.35 0 2.44-1.09 2.44-2.44v-4.44z" />

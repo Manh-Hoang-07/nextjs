@@ -4,20 +4,20 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
 
 // 1. Define Warehouse Schema
 const warehouseSchema = z.object({
   code: z.string().min(1, "Mã kho là bắt buộc").max(100, "Mã kho tối đa 100 ký tự"),
   name: z.string().min(1, "Tên kho là bắt buộc").max(255, "Tên kho tối đa 255 ký tự"),
-  address: z.string().max(500).optional().nullable(),
-  city: z.string().max(100).optional().nullable(),
-  district: z.string().max(100).optional().nullable(),
+  address: z.string().max(500, "Địa chỉ tối đa 500 ký tự").optional().nullable(),
+  city: z.string().max(100, "Thành phố tối đa 100 ký tự").optional().nullable(),
+  district: z.string().max(100, "Quận/Huyện tối đa 100 ký tự").optional().nullable(),
   latitude: z.coerce.number().optional().nullable(),
   longitude: z.coerce.number().optional().nullable(),
-  phone: z.string().max(20).optional().nullable(),
-  manager_name: z.string().max(255).optional().nullable(),
+  phone: z.string().max(20, "Số điện thoại tối đa 20 ký tự").optional().nullable(),
+  manager_name: z.string().max(255, "Tên quản lý tối đa 255 ký tự").optional().nullable(),
   priority: z.coerce.number().int().min(0, "Độ ưu tiên không được âm").default(0),
   is_active: z.boolean().default(true),
 });

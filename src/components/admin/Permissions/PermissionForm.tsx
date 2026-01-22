@@ -4,17 +4,17 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
 
 // 1. Define Permission Schema
 const permissionSchema = z.object({
   code: z.string().min(1, "Mã code là bắt buộc").max(120, "Mã code tối đa 120 ký tự"),
-  name: z.string().max(150, "Tên quyền tối đa 150 ký tự").optional().nullable(),
-  scope: z.string().default("context"),
+  name: z.string().min(1, "Tên quyền là bắt buộc").max(150, "Tên quyền tối đa 150 ký tự"),
+  scope: z.string().min(1, "Phạm vi là bắt buộc").default("context"),
   parent_id: z.coerce.number().optional().nullable(),
-  status: z.string().default("active"),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
 });
 
 type PermissionFormValues = z.infer<typeof permissionSchema>;
@@ -151,6 +151,7 @@ export default function PermissionForm({
               {...register("name")}
               placeholder="Ví dụ: Quản lý bài viết"
               error={errors.name?.message}
+              required
             />
 
             <Controller

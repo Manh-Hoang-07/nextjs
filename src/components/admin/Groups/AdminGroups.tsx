@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import api from "@/lib/api/client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
-import { useToastContext } from "@/contexts/ToastContext";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import ConfirmModal from "@/components/ui/ConfirmModal";
-import Actions from "@/components/ui/Actions";
-import Pagination from "@/components/ui/Pagination";
+import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
+import ConfirmModal from "@/components/ui/feedback/ConfirmModal";
+import Actions from "@/components/ui/data-display/Actions";
+import Pagination from "@/components/ui/data-display/Pagination";
 import GroupsFilter from "./GroupsFilter";
 import CreateGroup from "./CreateGroup";
 import EditGroup from "./EditGroup";
-import { useRouter } from "next/navigation";
+import api from "@/lib/api/client";
 
 interface Group {
   id: number;
@@ -39,45 +39,46 @@ const getTypeLabel = (type?: string): string => {
 
 export default function AdminGroups({ title = "Quản lý Groups", createButtonText = "Thêm group mới" }: AdminGroupsProps) {
   const router = useRouter();
-  const [items, setItems] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [apiErrors, setApiErrors] = useState<Record<string, any>>({});
-  const [modals, setModals] = useState({ create: false, edit: false, delete: false });
-  const [selectedItem, setSelectedItem] = useState<Group | null>(null);
+  const {
+    items,
+    loading,
+    pagination,
+    filters,
+    apiErrors,
+    modals,
+    selectedItem,
+    openCreateModal,
+    closeCreateModal,
+    openEditModal,
+    closeEditModal,
+    openDeleteModal,
+    closeDeleteModal,
+    updateFilters,
+    changePage,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    getSerialNumber,
+    hasData,
+  } = useAdminListPage({
+    endpoints: {
+      list: adminEndpoints.groups.list,
+      create: adminEndpoints.groups.create,
+      update: (id) => adminEndpoints.groups.update(id),
+      delete: (id) => adminEndpoints.groups.delete(id),
+      show: (id) => adminEndpoints.groups.show(id),
+    },
+    messages: {
+      createSuccess: "Group đã được tạo thành công",
+      updateSuccess: "Group đã được cập nhật thành công",
+      deleteSuccess: "Group đã được xóa thành công",
+    },
+    fetchDetailBeforeEdit: true,
+  });
+
   const [statusEnums, setStatusEnums] = useState<any[]>([]);
-  const { showSuccess, showError } = useToastContext();
 
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = { page: pagination.page, ...filters };
-      const response = await api.get(adminEndpoints.groups.list, { params });
-      const data = response.data?.data || response.data || {};
-
-      if (Array.isArray(data)) {
-        setItems(data);
-      } else {
-        setItems(data.items || data.data || []);
-        if (data.pagination) {
-          setPagination({
-            page: data.pagination.page || 1,
-            totalPages: data.pagination.totalPages || 1,
-            totalItems: data.pagination.totalItems || 0,
-          });
-        }
-      }
-      setApiErrors({});
-    } catch (err: any) {
-      showError("Không thể tải danh sách groups");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.page, filters, showError]);
-
-  const fetchEnums = useCallback(async () => {
+  const fetchEnums = async () => {
     try {
       const response = await api.get(adminEndpoints.enums.byName("basic_status"));
       if (response.data?.success) {
@@ -88,95 +89,11 @@ export default function AdminGroups({ title = "Quản lý Groups", createButtonT
     } catch (e) {
       setStatusEnums([]);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchEnums();
-  }, [fetchEnums]);
-
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  const handleFilterUpdate = (newFilters: Record<string, any>) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  };
-
-  const openCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: true }));
-    setApiErrors({});
-  };
-
-  const closeCreateModal = () => {
-    setModals((prev) => ({ ...prev, create: false }));
-    setApiErrors({});
-  };
-
-  const openEditModal = (item: Group) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, edit: true }));
-    setApiErrors({});
-  };
-
-  const closeEditModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, edit: false }));
-    setApiErrors({});
-  };
-
-  const confirmDelete = (item: Group) => {
-    setSelectedItem(item);
-    setModals((prev) => ({ ...prev, delete: true }));
-  };
-
-  const closeDeleteModal = () => {
-    setSelectedItem(null);
-    setModals((prev) => ({ ...prev, delete: false }));
-  };
-
-  const handleGroupCreated = async (formData: any) => {
-    try {
-      await api.post(adminEndpoints.groups.create, formData);
-      showSuccess("Group đã được tạo thành công");
-      closeCreateModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Không thể tạo group");
-    }
-  };
-
-  const handleGroupUpdated = async (formData: any) => {
-    if (!selectedItem) return;
-    try {
-      await api.put(adminEndpoints.groups.update(selectedItem.id), formData);
-      showSuccess("Group đã được cập nhật thành công");
-      closeEditModal();
-      fetchItems();
-    } catch (err: any) {
-      const errors = err?.response?.data?.errors || {};
-      setApiErrors(errors);
-      showError("Không thể cập nhật group");
-    }
-  };
-
-  const deleteGroup = async () => {
-    if (!selectedItem) return;
-    try {
-      await api.delete(adminEndpoints.groups.delete(selectedItem.id));
-      showSuccess("Group đã được xóa thành công");
-      closeDeleteModal();
-      fetchItems();
-    } catch (err: any) {
-      showError("Không thể xóa group");
-    }
-  };
+  }, []);
 
   const navigateToMembers = (groupId: number) => {
     router.push(`/admin/groups/${groupId}/members`);
@@ -192,12 +109,6 @@ export default function AdminGroups({ title = "Quản lý Groups", createButtonT
     return found?.class || found?.badge_class || found?.color_class || "bg-gray-100 text-gray-800";
   };
 
-  const getSerialNumber = (index: number): number => {
-    return (pagination.page - 1) * 10 + index + 1;
-  };
-
-  const hasData = items.length > 0;
-
   return (
     <div className="admin-groups">
       <div className="flex justify-between items-center mb-6">
@@ -207,7 +118,7 @@ export default function AdminGroups({ title = "Quản lý Groups", createButtonT
         </button>
       </div>
 
-      <GroupsFilter initialFilters={filters} statusEnums={statusEnums} onUpdateFilters={handleFilterUpdate} />
+      <GroupsFilter initialFilters={filters} statusEnums={statusEnums} onUpdateFilters={updateFilters} />
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         {loading ? (
@@ -225,7 +136,7 @@ export default function AdminGroups({ title = "Quản lý Groups", createButtonT
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {items.map((group, index) => (
+              {items.map((group: Group, index) => (
                 <tr key={group.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getSerialNumber(index)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -254,7 +165,7 @@ export default function AdminGroups({ title = "Quản lý Groups", createButtonT
                         },
                         {
                           label: "Xóa",
-                          action: () => confirmDelete(group),
+                          action: () => openDeleteModal(group),
                           icon: "trash",
                         },
                       ]}
@@ -274,26 +185,25 @@ export default function AdminGroups({ title = "Quản lý Groups", createButtonT
         )}
       </div>
 
-      {hasData && <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} onPageChange={handlePageChange} />}
+      {hasData && <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} onPageChange={changePage} />}
 
       {modals.create && (
-        <CreateGroup show={modals.create} apiErrors={apiErrors} onClose={closeCreateModal} onCreated={handleGroupCreated} />
+        <CreateGroup show={modals.create} apiErrors={apiErrors} onClose={closeCreateModal} onCreated={handleCreate} />
       )}
 
       {modals.edit && selectedItem && (
-        <EditGroup show={modals.edit} group={selectedItem} apiErrors={apiErrors} onClose={closeEditModal} onUpdated={handleGroupUpdated} />
+        <EditGroup show={modals.edit} group={selectedItem} apiErrors={apiErrors} onClose={closeEditModal} onUpdated={(data) => handleUpdate(selectedItem.id, data)} />
       )}
 
-      {modals.delete && selectedItem && (
+      {selectedItem && (
         <ConfirmModal
           show={modals.delete}
           title="Xác nhận xóa"
-          message={`Bạn có chắc chắn muốn xóa group ${selectedItem.name || selectedItem.code || ""}?`}
+          message={`Bạn có chắc chắn muốn xóa group ${(selectedItem as Group).name || (selectedItem as Group).code || ""}?`}
           onClose={closeDeleteModal}
-          onConfirm={deleteGroup}
+          onConfirm={() => handleDelete(selectedItem.id)}
         />
       )}
     </div>
   );
 }
-

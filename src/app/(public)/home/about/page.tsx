@@ -1,7 +1,7 @@
 import { getAboutSections, getStaffList } from "@/lib/api/public";
 import { AboutSection, TeamMember } from "@/types/api";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/navigation/Button";
 import Image from "next/image";
 import { Metadata } from "next";
 

@@ -10,6 +10,7 @@ import {
   ChevronDownIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
+import Image from "next/image";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 
 import { SystemConfig } from "@/types/api";
@@ -69,39 +70,39 @@ export function PublicHeader({
 
   // Navigation items
   const navigationItems = [
-    { name: "Trang chủ", path: "/", icon: "🏠" },
+    { name: "Trang chủ", path: "/", icon: "" },
     {
       name: "Dự án",
       path: "/home/projects",
-      icon: "🏗️",
+      icon: "",
       children: [
-        { name: "Dự án nổi bật", path: "/home/projects", icon: "⭐" },
-        { name: "Dự án đang thi công", path: "/home/projects?status=ongoing", icon: "🚧" },
-        { name: "Dự án đã hoàn thành", path: "/home/projects?status=completed", icon: "✅" },
+        { name: "Dự án nổi bật", path: "/home/projects", icon: "" },
+        { name: "Dự án đang thi công", path: "/home/projects?status=ongoing", icon: "" },
+        { name: "Dự án đã hoàn thành", path: "/home/projects?status=completed", icon: "" },
       ],
     },
     {
       name: "Dịch vụ",
       path: "/home/services",
-      icon: "🔧",
+      icon: "",
       children: [
-        { name: "Thiết kế xây dựng", path: "/home/services/design", icon: "📐" },
-        { name: "Thi công xây dựng", path: "/home/services/construction", icon: "🏗️" },
-        { name: "Giám sát thi công", path: "/home/services/supervision", icon: "👷" },
+        { name: "Thiết kế xây dựng", path: "/home/services/design", icon: "" },
+        { name: "Thi công xây dựng", path: "/home/services/construction", icon: "" },
+        { name: "Giám sát thi công", path: "/home/services/supervision", icon: "" },
       ],
     },
     {
       name: "Về chúng tôi",
       path: "/home/about",
-      icon: "ℹ️",
+      icon: "",
       children: [
-        { name: "Giới thiệu chung", path: "/home/about", icon: "🏢" },
-        { name: "Đội ngũ nhân sự", path: "/home/staff", icon: "👥" },
-        { name: "Chứng chỉ & Giấy phép", path: "/home/certificates", icon: "📜" },
+        { name: "Giới thiệu chung", path: "/home/about", icon: "" },
+        { name: "Đội ngũ nhân sự", path: "/home/staff", icon: "" },
+        { name: "Chứng chỉ & Giấy phép", path: "/home/certificates", icon: "" },
       ],
     },
-    { name: "Tin tức", path: "/home/posts", icon: "📰" },
-    { name: "Liên hệ", path: "/home/contact", icon: "📞" },
+    { name: "Tin tức", path: "/home/posts", icon: "" },
+    { name: "Liên hệ", path: "/home/contact", icon: "" },
   ];
 
   const isActive = (path: string) => pathname === path || pathname?.startsWith(path + "/");
@@ -142,12 +143,13 @@ export function PublicHeader({
             {/* Logo area */}
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-3 group">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 overflow-hidden`}>
+                <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 overflow-hidden`}>
                   {systemConfig?.site_logo ? (
-                    <img
+                    <Image
                       src={systemConfig.site_logo}
                       alt={siteName}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

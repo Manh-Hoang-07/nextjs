@@ -4,23 +4,23 @@ import { useEffect, useMemo, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
-import SearchableSelect from "@/components/ui/SearchableSelect";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
+import SearchableSelect from "@/components/ui/forms/SearchableSelect";
 import { adminEndpoints } from "@/lib/api/endpoints";
 
 // 1. Define Menu Schema
 const menuSchema = z.object({
   code: z.string().min(3, "Code phải có ít nhất 3 ký tự").max(120, "Code tối đa 120 ký tự"),
   name: z.string().min(1, "Tên menu là bắt buộc").max(150, "Tên menu tối đa 150 ký tự"),
-  path: z.string().max(255).optional().nullable().or(z.literal("")),
-  api_path: z.string().max(255).optional().nullable().or(z.literal("")),
-  icon: z.string().max(120).optional().nullable().or(z.literal("")),
-  type: z.string().default("route"),
-  status: z.string().default("active"),
+  path: z.string().max(255, "Path tối đa 255 ký tự").optional().nullable(),
+  api_path: z.string().max(255, "API Path tối đa 255 ký tự").optional().nullable(),
+  icon: z.string().max(120, "Icon tối đa 120 ký tự").optional().nullable(),
+  type: z.string().min(1, "Loại menu là bắt buộc").default("route"),
+  status: z.string().min(1, "Trạng thái là bắt buộc").default("active"),
   parent_id: z.coerce.number().optional().nullable(),
-  sort_order: z.coerce.number().default(0),
+  sort_order: z.coerce.number().int().min(0, "Thứ tự không được âm").default(0),
   is_public: z.boolean().default(false),
   show_in_menu: z.boolean().default(true),
   required_permission_id: z.coerce.number().optional().nullable(),

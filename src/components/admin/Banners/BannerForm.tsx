@@ -4,10 +4,10 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Modal from "@/components/ui/Modal";
-import FormField from "@/components/ui/FormField";
-import ImageUploader from "@/components/ui/ImageUploader";
-import SingleSelectEnhanced from "@/components/ui/SingleSelectEnhanced";
+import Modal from "@/components/ui/feedback/Modal";
+import FormField from "@/components/ui/forms/FormField";
+import ImageUploader from "@/components/ui/forms/ImageUploader";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
 import { adminEndpoints } from "@/lib/api/endpoints";
 
 // 1. Định nghĩa Banner Schema (Declarative)
@@ -244,7 +244,6 @@ export default function BannerForm({
                 render={({ field }) => (
                   <ImageUploader
                     {...field}
-                    error={errors.image?.message as any}
                   />
                 )}
               />
@@ -261,7 +260,6 @@ export default function BannerForm({
                 render={({ field }) => (
                   <ImageUploader
                     {...field}
-                    error={errors.mobile_image?.message as any}
                   />
                 )}
               />
