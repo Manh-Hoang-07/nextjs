@@ -60,7 +60,7 @@ export default function BirthdayContent() {
 
     useEffect(() => {
         const revealOnScroll = () => {
-            const reveals = document.querySelectorAll(".reveal");
+            const reveals = document.querySelectorAll(".reveal, .reveal-left, .reveal-right");
             const triggerBottom = window.innerHeight * 0.85;
 
             reveals.forEach((el) => {
@@ -181,6 +181,9 @@ export default function BirthdayContent() {
             )}
 
             <header className="hero">
+                <div className="blob" style={{ position: 'absolute', top: '10%', right: '10%', zIndex: 0 }}></div>
+                <div className="blob" style={{ position: 'absolute', bottom: '20%', left: '5%', width: '400px', height: '400px', zIndex: 0 }}></div>
+
                 <div className="hero-image-container" ref={heroRef}>
                     <Image
                         src="/images/baby_1.jpg"
@@ -220,54 +223,54 @@ export default function BirthdayContent() {
 
             <section className="journey">
                 <div className="timeline-line"></div>
-                <div className="milestone reveal">
+                <div className="milestone reveal-left">
                     <div className="milestone-image" onClick={() => openModal(1)} style={{ position: 'relative' }}>
                         <Image src="/images/baby_2.jpg" alt="Sleeping Baby" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">01</span>
-                        <h3>Hạnh phúc là có Ba Mẹ</h3>
-                        <p> Trong vòng tay và trên đôi vai vững chãi của Ba, sự dịu dàng của Mẹ, Gia Huy được lớn khôn trong một biển trời yêu thương vô bờ bến.</p>
+                        <h3>Hạnh phúc là có <span className="highlight">Ba Mẹ</span></h3>
+                        <p> Trong vòng tay và trên đôi vai vững chãi của Ba, sự dịu dàng của Mẹ, Gia Huy được lớn khôn trong một <span className="highlight">biển trời yêu thương</span> vô bờ bến.</p>
                     </div>
                 </div>
-                <div className="milestone reveal alt">
+                <div className="milestone reveal-right alt">
                     <div className="milestone-image" onClick={() => openModal(2)} style={{ position: 'relative' }}>
                         <Image src="/images/baby_3.jpg" alt="First Steps" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">02</span>
-                        <h3>Tổ ấm nhỏ của Gia Huy</h3>
-                        <p> Mỗi khoảnh khắc cả nhà mình bên nhau đều là những trang hồi ký đẹp nhất mà Ba Mẹ muốn lưu giữ mãi mãi trong trái tim dành cho con.</p>
+                        <h3>Tổ ấm nhỏ của <span className="highlight">Gia Huy</span></h3>
+                        <p> Mỗi khoảnh khắc cả nhà mình bên nhau đều là những <span className="highlight">trang hồi ký đẹp nhất</span> mà Ba Mẹ muốn lưu giữ mãi mãi trong trái tim dành cho con.</p>
                     </div>
                 </div>
-                <div className="milestone reveal">
+                <div className="milestone reveal-left">
                     <div className="milestone-image" onClick={() => openModal(3)} style={{ position: 'relative' }}>
                         <Image src="/images/baby_4.jpg" alt="Birthday Cake" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">03</span>
-                        <h3>Nụ cười tỏa nắng</h3>
-                        <p> Nụ cười của con chính là ánh nắng rực rỡ nhất, xua tan mọi mệt mỏi và sưởi ấm tâm hồn Ba Mẹ mỗi ngày trôi qua.</p>
+                        <h3>Nụ cười <span className="highlight">tỏa nắng</span></h3>
+                        <p> Nụ cười của con chính là <span className="highlight">ánh nắng rực rỡ nhất</span>, xua tan mọi mệt mỏi và sưởi ấm tâm hồn Ba Mẹ mỗi ngày trôi qua.</p>
                     </div>
                 </div>
-                <div className="milestone reveal alt">
+                <div className="milestone reveal-right alt">
                     <div className="milestone-image" onClick={() => openModal(4)} style={{ position: 'relative' }}>
                         <Image src="/images/baby_5.jpg" alt="Family Time" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">04</span>
-                        <h3>Gắn kết yêu thương</h3>
-                        <p> Hạnh phúc không ở đâu xa, nó nằm ngay trong những cái ôm, những ánh mắt trìu mến khi cả gia đình mình cùng đồng hành bên nhau.</p>
+                        <h3>Gắn kết <span className="highlight">yêu thương</span></h3>
+                        <p> Hạnh phúc không ở đâu xa, nó nằm ngay trong những <span className="highlight">cái ôm</span>, những ánh mắt trìu mến khi cả gia đình mình cùng đồng hành bên nhau.</p>
                     </div>
                 </div>
-                <div className="milestone reveal">
+                <div className="milestone reveal-left">
                     <div className="milestone-image" onClick={() => openModal(5)} style={{ position: 'relative' }}>
                         <Image src="/images/baby_6.jpg" alt="Birthday Celebration" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
                     </div>
                     <div className="milestone-content">
                         <span className="number">05</span>
-                        <h3>Hành trình trải nghiệm</h3>
-                        <p> Một tuổi đầu đời với biết bao bỡ ngỡ, nhưng cũng đầy ắp tiếng cười. Chúc Gia Huy của Ba Mẹ luôn mạnh khỏe, thông minh và thật bình an.</p>
+                        <h3>Hành trình <span className="highlight">trải nghiệm</span></h3>
+                        <p> Một tuổi đầu đời với biết bao bỡ ngỡ, nhưng cũng <span className="highlight">đầy ắp tiếng cười</span>. Chúc Gia Huy của Ba Mẹ luôn mạnh khỏe, thông minh và thật bình an.</p>
                     </div>
                 </div>
             </section>
@@ -331,7 +334,8 @@ export default function BirthdayContent() {
                 </div>
             </section>
 
-            <section className="letter section-padding">
+            <section className="letter section-padding" style={{ position: 'relative', overflow: 'hidden' }}>
+                <div className="blob" style={{ position: 'absolute', bottom: '-20%', right: '5%', background: 'rgba(197, 160, 89, 0.15)', zIndex: 0 }}></div>
                 <div className="container">
                     <div className="letter-box reveal">
                         <div className="card-edge top"></div>
