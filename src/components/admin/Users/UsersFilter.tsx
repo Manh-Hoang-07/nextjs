@@ -52,11 +52,11 @@ export default function UsersFilter({
       advancedFilters={({ filters, onChange }) => (
         <div>
           <SelectFilter
-            value={filters["filters[status]"] || ""}
+            value={filters["status"] || ""}
             options={statusOptions}
             placeholder="Tất cả trạng thái"
             onChange={(value) => {
-              filters["filters[status]"] = value;
+              filters["status"] = value;
               onChange();
             }}
           />
@@ -65,3 +65,4 @@ export default function UsersFilter({
     />
   );
 }
+

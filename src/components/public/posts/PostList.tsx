@@ -56,10 +56,10 @@ export function PostList({ initialPosts, categories }: PostListProps) {
             try {
                 const params: any = {};
                 if (filters.category !== "all") {
-                    params["filters[primary_category.slug]"] = filters.category;
+                    params["primary_category.slug"] = filters.category;
                 }
                 if (filters.search) {
-                    params["filters[search]"] = filters.search;
+                    params["search"] = filters.search;
                 }
 
                 const response = await api.get(publicEndpoints.posts.list, { params });

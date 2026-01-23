@@ -57,22 +57,22 @@ export default function CertificatesFilter({
         <div className="flex gap-4">
           <div className="min-w-[160px]">
             <SelectFilter
-              value={filters["filters[type]"] || ""}
+              value={filters["type"] || ""}
               options={typeOptions}
               placeholder="Loại chứng chỉ"
               onChange={(value) => {
-                filters["filters[type]"] = value;
+                filters["type"] = value;
                 onChange();
               }}
             />
           </div>
           <div className="min-w-[160px]">
             <SelectFilter
-              value={filters["filters[status]"] || ""}
+              value={filters["status"] || ""}
               options={statusOptions}
               placeholder="Trạng thái"
               onChange={(value) => {
-                filters["filters[status]"] = value;
+                filters["status"] = value;
                 onChange();
               }}
             />
@@ -82,4 +82,5 @@ export default function CertificatesFilter({
     />
   );
 }
+
 

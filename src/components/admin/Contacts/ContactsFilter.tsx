@@ -43,12 +43,12 @@ export default function ContactsFilter({
             advancedFilters={({ filters, onChange }) => (
                 <div>
                     <SelectFilter
-                        value={filters["filters[status]"] || ""}
+                        value={filters["status"] || ""}
                         options={statusOptions}
                         label="Trạng thái"
                         placeholder="Tất cả trạng thái"
                         onChange={(value) => {
-                            filters["filters[status]"] = value;
+                            filters["status"] = value;
                             onChange();
                         }}
                     />
@@ -57,3 +57,4 @@ export default function ContactsFilter({
         />
     );
 }
+

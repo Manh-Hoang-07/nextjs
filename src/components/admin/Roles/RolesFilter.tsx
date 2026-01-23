@@ -51,11 +51,11 @@ export default function RolesFilter({
       onFilterChange={onFilterChange}
       advancedFilters={({ filters, onChange }) => (
         <SelectFilter
-          value={filters["filters[status]"] || ""}
+          value={filters["status"] || ""}
           options={statusOptions}
           placeholder="Tất cả trạng thái"
           onChange={(value) => {
-            filters["filters[status]"] = value;
+            filters["status"] = value;
             onChange();
           }}
         />
@@ -63,5 +63,6 @@ export default function RolesFilter({
     />
   );
 }
+
 
 

@@ -60,22 +60,22 @@ export default function AboutSectionsFilter({
         <div className="flex gap-4">
           <div className="min-w-[150px]">
             <SelectFilter
-              value={filters["filters[section_type]"] || ""}
+              value={filters["section_type"] || ""}
               options={sectionTypeOptions}
               placeholder="Loại section"
               onChange={(value) => {
-                filters["filters[section_type]"] = value;
+                filters["section_type"] = value;
                 onChange();
               }}
             />
           </div>
           <div className="min-w-[150px]">
             <SelectFilter
-              value={filters["filters[status]"] || ""}
+              value={filters["status"] || ""}
               options={statusOptions}
               placeholder="Trạng thái"
               onChange={(value) => {
-                filters["filters[status]"] = value;
+                filters["status"] = value;
                 onChange();
               }}
             />
@@ -85,4 +85,5 @@ export default function AboutSectionsFilter({
     />
   );
 }
+
 

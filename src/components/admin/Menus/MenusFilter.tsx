@@ -93,22 +93,22 @@ export default function MenusFilter({
         <>
           <div>
             <SelectFilter
-              value={filters["filters[parent_id]"] || ""}
+              value={filters["parent_id"] || ""}
               options={parentMenuOptions}
               placeholder="Chọn menu cha"
               onChange={(value) => {
-                filters["filters[parent_id]"] = value;
+                filters["parent_id"] = value;
                 onChange();
               }}
             />
           </div>
           <div>
             <SelectFilter
-              value={filters["filters[type]"] || ""}
+              value={filters["type"] || ""}
               options={typeOptions}
               placeholder="Chọn loại menu"
               onChange={(value) => {
-                filters["filters[type]"] = value;
+                filters["type"] = value;
                 onChange();
               }}
             />
@@ -116,22 +116,22 @@ export default function MenusFilter({
           <div className="flex gap-4">
             <div className="min-w-[150px]">
               <SelectFilter
-                value={filters["filters[status]"] || ""}
+                value={filters["status"] || ""}
                 options={statusOptions}
                 placeholder="Chọn trạng thái"
                 onChange={(value) => {
-                  filters["filters[status]"] = value;
+                  filters["status"] = value;
                   onChange();
                 }}
               />
             </div>
             <div className="min-w-[150px]">
               <SelectFilter
-                value={filters["filters[show_in_menu]"] || ""}
+                value={filters["show_in_menu"] || ""}
                 options={showInMenuOptions}
                 placeholder="Hiển thị trong menu"
                 onChange={(value) => {
-                  filters["filters[show_in_menu]"] = value;
+                  filters["show_in_menu"] = value;
                   onChange();
                 }}
               />
@@ -142,3 +142,4 @@ export default function MenusFilter({
     />
   );
 }
+

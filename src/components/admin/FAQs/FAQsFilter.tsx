@@ -44,11 +44,11 @@ export default function FAQsFilter({
       advancedFilters={({ filters, onChange }) => (
         <div className="min-w-[150px]">
           <SelectFilter
-            value={filters["filters[status]"] || ""}
+            value={filters["status"] || ""}
             options={statusOptions}
             placeholder="Trạng thái"
             onChange={(value) => {
-              filters["filters[status]"] = value;
+              filters["status"] = value;
               onChange();
             }}
           />
@@ -57,5 +57,6 @@ export default function FAQsFilter({
     />
   );
 }
+
 
 

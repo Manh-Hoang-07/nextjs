@@ -53,22 +53,22 @@ export default function StaffFilter({
         <div className="flex gap-4">
           <div className="min-w-[140px]">
             <SelectFilter
-              value={filters["filters[status]"] || ""}
+              value={filters["status"] || ""}
               options={statusOptions}
               placeholder="Trạng thái"
               onChange={(value) => {
-                filters["filters[status]"] = value;
+                filters["status"] = value;
                 onChange();
               }}
             />
           </div>
           <div className="min-w-[140px]">
             <SelectFilter
-              value={filters["filters[department]"] || ""}
+              value={filters["department"] || ""}
               options={departmentOptions}
               placeholder="Phòng ban"
               onChange={(value) => {
-                filters["filters[department]"] = value;
+                filters["department"] = value;
                 onChange();
               }}
             />
@@ -78,4 +78,5 @@ export default function StaffFilter({
     />
   );
 }
+
 

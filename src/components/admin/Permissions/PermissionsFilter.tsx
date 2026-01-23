@@ -54,22 +54,22 @@ export default function PermissionsFilter({
         <>
           <div className="min-w-[150px]">
             <SelectFilter
-              value={filters["filters[scope]"] || ""}
+              value={filters["scope"] || ""}
               options={scopeOptions}
               placeholder="Phạm vi"
               onChange={(value) => {
-                filters["filters[scope]"] = value;
+                filters["scope"] = value;
                 onChange();
               }}
             />
           </div>
           <div className="min-w-[150px]">
             <SelectFilter
-              value={filters["filters[status]"] || ""}
+              value={filters["status"] || ""}
               options={statusOptions}
               placeholder="Trạng thái"
               onChange={(value) => {
-                filters["filters[status]"] = value;
+                filters["status"] = value;
                 onChange();
               }}
             />
@@ -79,3 +79,4 @@ export default function PermissionsFilter({
     />
   );
 }
+

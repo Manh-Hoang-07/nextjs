@@ -73,33 +73,33 @@ export default function PostsFilter({
       advancedFilters={({ filters, onChange }) => (
         <div>
           <SelectFilter
-            value={filters["filters[include_deleted]"] || ""}
+            value={filters["include_deleted"] || ""}
             options={includeDeletedOptions}
             placeholder="Bao gồm đã xóa"
             onChange={(value) => {
-              filters["filters[include_deleted]"] = value;
+              filters["include_deleted"] = value;
               onChange();
             }}
           />
           <div className="mt-4 flex gap-4">
             <div className="min-w-[150px]">
               <SelectFilter
-                value={filters["filters[status]"] || ""}
+                value={filters["status"] || ""}
                 options={statusOptions}
                 placeholder="Chọn trạng thái"
                 onChange={(value) => {
-                  filters["filters[status]"] = value;
+                  filters["status"] = value;
                   onChange();
                 }}
               />
             </div>
             <div className="min-w-[150px]">
               <SelectFilter
-                value={filters["filters[category_id]"] || ""}
+                value={filters["category_id"] || ""}
                 options={categoryOptions}
                 placeholder="Chọn danh mục"
                 onChange={(value) => {
-                  filters["filters[category_id]"] = value;
+                  filters["category_id"] = value;
                   onChange();
                 }}
               />
@@ -110,5 +110,6 @@ export default function PostsFilter({
     />
   );
 }
+
 
 

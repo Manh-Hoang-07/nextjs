@@ -73,22 +73,22 @@ export default function ProjectsFilter({
           <div className="flex gap-4">
             <div className="min-w-[150px]">
               <SelectFilter
-                value={filters["filters[status]"] || ""}
+                value={filters["status"] || ""}
                 options={statusOptions}
                 placeholder="Chọn trạng thái"
                 onChange={(value) => {
-                  filters["filters[status]"] = value;
+                  filters["status"] = value;
                   onChange();
                 }}
               />
             </div>
             <div className="min-w-[150px]">
               <SelectFilter
-                value={filters["filters[featured]"] || ""}
+                value={filters["featured"] || ""}
                 options={featuredOptions}
                 placeholder="Nổi bật"
                 onChange={(value) => {
-                  filters["filters[featured]"] = value;
+                  filters["featured"] = value;
                   onChange();
                 }}
               />
@@ -96,11 +96,11 @@ export default function ProjectsFilter({
           </div>
           <div>
             <SelectFilter
-              value={filters["filters[include_deleted]"] || ""}
+              value={filters["include_deleted"] || ""}
               options={includeDeletedOptions}
               placeholder="Bao gồm đã xóa"
               onChange={(value) => {
-                filters["filters[include_deleted]"] = value;
+                filters["include_deleted"] = value;
                 onChange();
               }}
             />
@@ -110,3 +110,4 @@ export default function ProjectsFilter({
     />
   );
 }
+

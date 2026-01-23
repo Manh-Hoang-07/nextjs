@@ -63,20 +63,20 @@ export default function GroupsFilter({
       advancedFilters={({ filters, onChange }) => (
         <>
           <SelectFilter
-            value={filters["filters[type]"] || ""}
+            value={filters["type"] || ""}
             options={typeOptions}
             placeholder="Tất cả loại"
             onChange={(value) => {
-              filters["filters[type]"] = value;
+              filters["type"] = value;
               onChange();
             }}
           />
           <SelectFilter
-            value={filters["filters[status]"] || ""}
+            value={filters["status"] || ""}
             options={statusOptions}
             placeholder="Tất cả trạng thái"
             onChange={(value) => {
-              filters["filters[status]"] = value;
+              filters["status"] = value;
               onChange();
             }}
           />

@@ -52,22 +52,22 @@ export default function GalleryFilter({
         <div className="flex gap-4">
           <div className="min-w-[140px]">
             <SelectFilter
-              value={filters["filters[status]"] || ""}
+              value={filters["status"] || ""}
               options={statusOptions}
               placeholder="Trạng thái"
               onChange={(value) => {
-                filters["filters[status]"] = value;
+                filters["status"] = value;
                 onChange();
               }}
             />
           </div>
           <div className="min-w-[140px]">
             <SelectFilter
-              value={filters["filters[featured]"] || ""}
+              value={filters["featured"] || ""}
               options={featuredOptions}
               placeholder="Nổi bật"
               onChange={(value) => {
-                filters["filters[featured]"] = value;
+                filters["featured"] = value;
                 onChange();
               }}
             />
@@ -77,3 +77,4 @@ export default function GalleryFilter({
     />
   );
 }
+

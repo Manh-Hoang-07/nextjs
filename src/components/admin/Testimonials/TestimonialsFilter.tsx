@@ -60,33 +60,33 @@ export default function TestimonialsFilter({
         <div className="flex gap-4">
           <div className="min-w-[140px]">
             <SelectFilter
-              value={filters["filters[status]"] || ""}
+              value={filters["status"] || ""}
               options={statusOptions}
               placeholder="Trạng thái"
               onChange={(value) => {
-                filters["filters[status]"] = value;
+                filters["status"] = value;
                 onChange();
               }}
             />
           </div>
           <div className="min-w-[140px]">
             <SelectFilter
-              value={filters["filters[featured]"] || ""}
+              value={filters["featured"] || ""}
               options={featuredOptions}
               placeholder="Nổi bật"
               onChange={(value) => {
-                filters["filters[featured]"] = value;
+                filters["featured"] = value;
                 onChange();
               }}
             />
           </div>
           <div className="min-w-[140px]">
             <SelectFilter
-              value={filters["filters[rating]"] || ""}
+              value={filters["rating"] || ""}
               options={ratingOptions}
               placeholder="Đánh giá"
               onChange={(value) => {
-                filters["filters[rating]"] = value;
+                filters["rating"] = value;
                 onChange();
               }}
             />
@@ -96,3 +96,4 @@ export default function TestimonialsFilter({
     />
   );
 }
+

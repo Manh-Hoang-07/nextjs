@@ -76,11 +76,11 @@ export default function BannersFilter({
         <>
           <div>
             <SelectFilter
-              value={filters["filters[include_deleted]"] || ""}
+              value={filters["include_deleted"] || ""}
               options={includeDeletedOptions}
               placeholder="Bao gồm đã xóa"
               onChange={(value) => {
-                filters["filters[include_deleted]"] = value;
+                filters["include_deleted"] = value;
                 onChange();
               }}
             />
@@ -88,22 +88,22 @@ export default function BannersFilter({
           <div className="flex gap-4">
             <div className="min-w-[150px]">
               <SelectFilter
-                value={filters["filters[status]"] || ""}
+                value={filters["status"] || ""}
                 options={statusOptions}
                 placeholder="Chọn trạng thái"
                 onChange={(value) => {
-                  filters["filters[status]"] = value;
+                  filters["status"] = value;
                   onChange();
                 }}
               />
             </div>
             <div className="min-w-[150px]">
               <SelectFilter
-                value={filters["filters[location_id]"] || ""}
+                value={filters["location_id"] || ""}
                 options={locationOptions}
                 placeholder="Chọn vị trí"
                 onChange={(value) => {
-                  filters["filters[location_id]"] = value;
+                  filters["location_id"] = value;
                   onChange();
                 }}
               />
@@ -114,3 +114,4 @@ export default function BannersFilter({
     />
   );
 }
+
