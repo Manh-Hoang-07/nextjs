@@ -771,13 +771,13 @@
     box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     transform-origin: center;
-    cursor: grab;
+    cursor: default;
     user-select: none;
     animation: zoomModal 0.5s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 .birthday-page .modal-content:active {
-    cursor: grabbing;
+    cursor: default;
 }
 
 .birthday-page #caption {
@@ -797,7 +797,6 @@
         transform: scale(0.8);
         opacity: 0;
     }
-
     to {
         transform: scale(1);
         opacity: 1;
@@ -886,54 +885,5 @@
 
     .birthday-page .nav-next {
         right: 5px;
-    }
-}
-
-/* Zoom Controls */
-.birthday-page .zoom-controls {
-    position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 15px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    padding: 10px 20px;
-    border-radius: 30px;
-    z-index: 10002;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.birthday-page .zoom-controls button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.3s;
-}
-
-.birthday-page .zoom-controls button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--accent-color);
-}
-
-.birthday-page #zoomReset {
-    font-size: 14px;
-    width: 60px;
-    border-radius: 20px;
-}
-
-@media (max-width: 768px) {
-    .birthday-page .zoom-controls {
-        bottom: 110px;
-        padding: 5px 10px;
     }
 }

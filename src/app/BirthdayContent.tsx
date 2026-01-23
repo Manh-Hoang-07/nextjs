@@ -21,10 +21,6 @@ const montserrat = Montserrat({
 export default function BirthdayContent() {
     const [modalOpen, setModalOpen] = useState(false);
     const [currentImgIndex, setCurrentImgIndex] = useState(0);
-    const [scale, setScale] = useState(1);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
-    const [isPanning, setIsPanning] = useState(false);
-    const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
     const heroRef = useRef<HTMLDivElement>(null);
     const modalImgRef = useRef<HTMLImageElement>(null);
@@ -92,8 +88,6 @@ export default function BirthdayContent() {
     const openModal = (index: number) => {
         setCurrentImgIndex(index);
         setModalOpen(true);
-        setScale(1);
-        setOffset({ x: 0, y: 0 });
         document.body.style.overflow = "hidden";
     };
 
@@ -105,52 +99,14 @@ export default function BirthdayContent() {
     const nextImg = useCallback((e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
         setCurrentImgIndex((prev) => (prev + 1) % images.length);
-        setScale(1);
-        setOffset({ x: 0, y: 0 });
     }, [images.length]);
 
     const prevImg = useCallback((e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
         setCurrentImgIndex((prev) => (prev - 1 + images.length) % images.length);
-        setScale(1);
-        setOffset({ x: 0, y: 0 });
     }, [images.length]);
 
-    const handleZoomIn = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setScale((prev) => Math.min(prev + 0.25, 4));
-    };
 
-    const handleZoomOut = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setScale((prev) => Math.max(prev - 0.25, 0.5));
-    };
-
-    const handleZoomReset = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setScale(1);
-        setOffset({ x: 0, y: 0 });
-    };
-
-    const onMouseDown = (e: React.MouseEvent) => {
-        if (scale > 1) {
-            setIsPanning(true);
-            setStartPos({ x: e.clientX - offset.x, y: e.clientY - offset.y });
-        }
-    };
-
-    const onMouseMove = (e: React.MouseEvent) => {
-        if (isPanning) {
-            setOffset({
-                x: e.clientX - startPos.x,
-                y: e.clientY - startPos.y,
-            });
-        }
-    };
-
-    const onMouseUp = () => {
-        setIsPanning(false);
-    };
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -356,8 +312,6 @@ export default function BirthdayContent() {
                             width={1200}
                             height={800}
                             style={{
-                                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-                                transition: isPanning ? "none" : "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                                 width: 'auto',
                                 height: 'auto',
                                 maxWidth: '100%',
@@ -365,18 +319,9 @@ export default function BirthdayContent() {
                                 objectFit: 'contain'
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            onMouseDown={onMouseDown}
-                            onMouseMove={onMouseMove}
-                            onMouseUp={onMouseUp}
-                            onMouseLeave={onMouseUp}
                         />
                     </div>
                     <span className="nav-next" onClick={nextImg}>&rsaquo;</span>
-                    <div className="zoom-controls" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={handleZoomIn} title="Phóng to">+</button>
-                        <button onClick={handleZoomOut} title="Thu nhỏ">-</button>
-                        <button onClick={handleZoomReset} title="Đặt lại">100%</button>
-                    </div>
                     <div id="caption">{images[currentImgIndex].alt}</div>
                 </div>
             )}
