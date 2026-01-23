@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api/client';
 import { adminEndpoints } from '@/lib/api/endpoints/admin';
 import { PostStatisticsOverview, PostViewStats } from '@/types/api';
@@ -46,11 +46,7 @@ export default function AdminPostStatistics() {
     const [loading, setLoading] = useState(true);
     const [statsLoading, setStatsLoading] = useState(false);
 
-    useEffect(() => {
-        fetchOverview();
-    }, []);
-
-    const fetchOverview = async () => {
+    const fetchOverview = useCallback(async () => {
         try {
             setLoading(true);
             const response = await apiClient.get<{ data: PostStatisticsOverview }>(
@@ -62,9 +58,13 @@ export default function AdminPostStatistics() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const fetchPostStats = async () => {
+    useEffect(() => {
+        fetchOverview();
+    }, [fetchOverview]);
+
+    const fetchPostStats = useCallback(async () => {
         if (!selectedPostId) return;
 
         try {
@@ -81,13 +81,13 @@ export default function AdminPostStatistics() {
         } finally {
             setStatsLoading(false);
         }
-    };
+    }, [selectedPostId, startDate, endDate]);
 
     useEffect(() => {
         if (selectedPostId) {
             fetchPostStats();
         }
-    }, [selectedPostId, startDate, endDate]);
+    }, [selectedPostId, fetchPostStats]);
 
     if (loading) {
         return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import api from "@/lib/api/client";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import { useAdminListPage } from "@/hooks/useAdminListPage";
@@ -118,7 +119,7 @@ export default function AdminPostComments({
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-8 w-8">
                                                     {comment.user?.image ? (
-                                                        <img className="h-8 w-8 rounded-full" src={comment.user.image} alt={comment.user.name} />
+                                                        <Image className="h-8 w-8 rounded-full object-cover" src={comment.user.image} alt={comment.user.name || "User"} width={32} height={32} />
                                                     ) : (
                                                         <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
                                                             <User className="text-gray-500 w-4 h-4" />
@@ -246,7 +247,7 @@ export default function AdminPostComments({
                         <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
                             <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
                                 {viewComment.user?.image ? (
-                                    <img src={viewComment.user.image} alt={viewComment.user.name} className="w-full h-full object-cover" />
+                                    <Image src={viewComment.user.image} alt={viewComment.user.name || "User"} className="w-full h-full object-cover" width={48} height={48} />
                                 ) : (
                                     <User className="text-blue-500 w-6 h-6" />
                                 )}
@@ -268,7 +269,7 @@ export default function AdminPostComments({
                         </div>
 
                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 italic text-gray-800 leading-relaxed min-h-[100px]">
-                            "{viewComment.content}"
+                            &quot;{viewComment.content}&quot;
                         </div>
 
                         {viewComment.post && (

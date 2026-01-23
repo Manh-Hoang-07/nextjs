@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { PostComment } from '@/types/api';
 import { publicEndpoints } from '@/lib/api/endpoints';
 import { api } from '@/lib/api/client';
@@ -86,7 +87,7 @@ export function PostComments({ postId }: PostCommentsProps) {
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
 
-    const fetchComments = async () => {
+    const fetchComments = useCallback(async () => {
         try {
             const response = await api.get(publicEndpoints.posts.comments(postId));
             setComments(response.data.data);
@@ -95,13 +96,13 @@ export function PostComments({ postId }: PostCommentsProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [postId]);
 
     useEffect(() => {
         if (postId) {
             fetchComments();
         }
-    }, [postId]);
+    }, [postId, fetchComments]);
 
     const toggleExpand = (id: string) => {
         setExpandedComments(prev => ({ ...prev, [id]: !prev[id] }));
@@ -132,7 +133,7 @@ export function PostComments({ postId }: PostCommentsProps) {
                     <div className="flex-shrink-0">
                         <div className="w-9 h-9 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
                             {comment.user?.image ? (
-                                <img src={comment.user.image} alt="" className="w-full h-full object-cover" />
+                                <Image src={comment.user.image} alt="" className="w-full h-full object-cover" width={36} height={36} />
                             ) : (
                                 <User size={18} className="text-gray-400" />
                             )}

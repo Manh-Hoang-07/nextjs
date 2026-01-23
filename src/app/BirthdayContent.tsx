@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import "./birthday.css";
 import { Playfair_Display, Montserrat } from "next/font/google";
@@ -107,19 +107,19 @@ export default function BirthdayContent() {
         document.body.style.overflow = "auto";
     };
 
-    const nextImg = (e?: React.MouseEvent) => {
+    const nextImg = useCallback((e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
         setCurrentImgIndex((prev) => (prev + 1) % images.length);
         setScale(1);
         setOffset({ x: 0, y: 0 });
-    };
+    }, [images.length]);
 
-    const prevImg = (e?: React.MouseEvent) => {
+    const prevImg = useCallback((e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
         setCurrentImgIndex((prev) => (prev - 1 + images.length) % images.length);
         setScale(1);
         setOffset({ x: 0, y: 0 });
-    };
+    }, [images.length]);
 
     const handleZoomIn = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -167,7 +167,7 @@ export default function BirthdayContent() {
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [modalOpen]);
+    }, [modalOpen, nextImg, prevImg]);
 
     return (
         <div className={`birthday-page ${playfair.variable} ${montserrat.variable}`}>
@@ -352,7 +352,7 @@ export default function BirthdayContent() {
             </section>
 
             <footer className="footer">
-                <p>&copy; 2026 • Vũ Gia Huy's 1st Birthday</p>
+                <p>&copy; 2026 • Vũ Gia Huy&apos;s 1st Birthday</p>
                 <p className="made-with">Lưu giữ với ❤️ dành cho Gia Huy</p>
             </footer>
 
@@ -361,14 +361,21 @@ export default function BirthdayContent() {
                     <span className="close-modal" onClick={closeModal}>&times;</span>
                     <span className="nav-prev" onClick={prevImg}>&lsaquo;</span>
                     <div className="modal-image-wrapper">
-                        <img
+                        <Image
                             ref={modalImgRef}
                             className="modal-content"
                             src={images[currentImgIndex].src}
                             alt={images[currentImgIndex].alt}
+                            width={1200}
+                            height={800}
                             style={{
                                 transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
                                 transition: isPanning ? "none" : "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                                width: 'auto',
+                                height: 'auto',
+                                maxWidth: '100%',
+                                maxHeight: '90vh',
+                                objectFit: 'contain'
                             }}
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={onMouseDown}
