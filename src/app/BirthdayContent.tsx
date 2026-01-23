@@ -19,7 +19,6 @@ const montserrat = Montserrat({
 });
 
 export default function BirthdayContent() {
-    const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [currentImgIndex, setCurrentImgIndex] = useState(0);
     const [scale, setScale] = useState(1);
@@ -81,15 +80,11 @@ export default function BirthdayContent() {
 
         window.addEventListener("scroll", handleScroll);
 
-        setTimeout(() => {
-            setLoading(false);
-            setTimeout(() => {
-                revealOnScroll();
-                document.querySelectorAll(".hero .fade-up").forEach((el) => {
-                    el.classList.add("active");
-                });
-            }, 300);
-        }, 700);
+        // Chạy animation ngay lập tức khi vào trang
+        revealOnScroll();
+        document.querySelectorAll(".hero .fade-up").forEach((el) => {
+            el.classList.add("active");
+        });
 
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
@@ -171,14 +166,6 @@ export default function BirthdayContent() {
 
     return (
         <div className={`birthday-page ${playfair.variable} ${montserrat.variable}`}>
-            {loading && (
-                <div id="loader" className="loader">
-                    <div className="loader-content">
-                        <span className="heart">❤</span>
-                        <p>Đang chuẩn bị kỷ niệm...</p>
-                    </div>
-                </div>
-            )}
 
             <header className="hero">
                 <div className="blob" style={{ position: 'absolute', top: '10%', right: '10%', zIndex: 0 }}></div>
