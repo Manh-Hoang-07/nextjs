@@ -17,15 +17,13 @@ export function PublicFooter({ systemConfig }: PublicFooterProps) {
   }, []);
 
   const systemInfo = {
-    name: systemConfig?.site_name || "Công Ty Xây Dựng",
+    name: systemConfig?.site_name || "Hệ thống",
     version: (systemConfig as any)?.version || "1.0.0",
     timezone: systemConfig?.timezone || "Asia/Ho_Chi_Minh",
   };
 
   const siteCopyright = systemConfig?.site_copyright || null;
-  const siteDescription =
-    systemConfig?.site_description ||
-    "Chuyên nghiệp - Chất lượng - Uy tín. Dịch vụ xây dựng toàn diện với nhiều năm kinh nghiệm.";
+  const siteDescription = systemConfig?.site_description || null;
   const siteLogo = systemConfig?.site_logo || null;
   const siteEmail = systemConfig?.site_email || null;
   const sitePhone = systemConfig?.site_phone || null;

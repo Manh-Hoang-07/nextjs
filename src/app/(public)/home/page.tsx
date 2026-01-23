@@ -69,16 +69,7 @@ export default async function LandingPage() {
 
       {/* Hero Banner Section */}
       <HeroBanner
-        locationCode="homepage_hero"
-        data={{
-          title: "Công Ty Xây Dựng",
-          subtitle: "Uy Tín & Chất Lượng",
-          description: defaultHero.subtitle,
-          image: data?.featured_projects?.[0]?.cover_image || "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2940&auto=format&fit=crop",
-          button_text: defaultHero.ctaText,
-          link: defaultHero.ctaLink,
-          link_target: "_self",
-        }}
+        locationCode="home_slider"
         containerClass="mb-0"
       />
 
