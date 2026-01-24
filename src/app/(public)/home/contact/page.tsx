@@ -1,13 +1,17 @@
 import { PageBanner } from "@/components/ui/navigation/PageBanner";
 import { ContactForm } from "@/components/public/contact/ContactForm";
 import { Metadata } from "next";
+import { getSystemConfig } from "@/lib/api/public";
+import { SystemConfig } from "@/types/api";
 
 export const metadata: Metadata = {
   title: "Liên hệ",
   description: "Liên hệ với chúng tôi để được tư vấn và hỗ trợ tốt nhất.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const config = await getSystemConfig("general") as SystemConfig || {};
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <PageBanner
@@ -29,10 +33,8 @@ export default function ContactPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Địa chỉ</h3>
-              <p className="text-gray-600">
-                Tầng 12, Tòa nhà Bitexco<br />
-                Số 2 Hải Triều, Quận 1<br />
-                TP. Hồ Chí Minh, Việt Nam
+              <p className="text-gray-600 whitespace-pre-line">
+                {config.site_address || "Tầng 12, Tòa nhà Bitexco\nSố 2 Hải Triều, Quận 1\nTP. Hồ Chí Minh, Việt Nam"}
               </p>
             </div>
 
@@ -44,8 +46,9 @@ export default function ContactPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Email</h3>
-              <p className="text-gray-600">tuyendung@vinahire.vn</p>
-              <p className="text-gray-600">contact@vinahire.vn</p>
+              <p className="text-gray-600">
+                {config.site_email || "contact@shoponline.com"}
+              </p>
             </div>
 
             {/* Phone */}
@@ -56,8 +59,9 @@ export default function ContactPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Điện thoại</h3>
-              <p className="text-gray-600">Hotline: 1900 1234</p>
-              <p className="text-gray-600">Mobile: 090 123 4567</p>
+              <p className="text-gray-600">
+                {config.site_phone || "1900 1234"}
+              </p>
             </div>
           </div>
 

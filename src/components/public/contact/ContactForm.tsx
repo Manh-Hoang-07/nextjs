@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/navigation/Button";
 import FormField from "@/components/ui/forms/FormField";
+import { submitContact } from "@/lib/api/contact";
+import { z } from "zod";
+
+const contactSchema = z.object({
+    name: z.string().min(1, "Họ và tên là bắt buộc").max(255, "Họ và tên tối đa 255 ký tự"),
+    email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ").max(255, "Email tối đa 255 ký tự"),
+    phone: z.string().max(20, "Số điện thoại tối đa 20 ký tự").optional().or(z.literal("")),
+    subject: z.string().max(255, "Chủ đề tối đa 255 ký tự").optional().or(z.literal("")),
+    message: z.string().min(1, "Nội dung là bắt buộc"),
+});
 
 export function ContactForm() {
     const [formData, setFormData] = useState({
@@ -15,6 +25,8 @@ export function ContactForm() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [generalError, setGeneralError] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -22,14 +34,40 @@ export function ContactForm() {
             ...prev,
             [name]: value
         }));
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setSubmitStatus("idle");
+        setErrors({});
+        setGeneralError(null);
+
+        // Validate Client-side
+        const validation = contactSchema.safeParse(formData);
+        if (!validation.success) {
+            const newErrors: Record<string, string> = {};
+            validation.error.errors.forEach(err => {
+                if (err.path[0]) {
+                    newErrors[err.path[0] as string] = err.message;
+                }
+            });
+            setErrors(newErrors);
+            setIsSubmitting(false);
+            setSubmitStatus("error");
+            return;
+        }
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            await submitContact(formData);
             setSubmitStatus("success");
             setFormData({
                 name: "",
@@ -38,15 +76,46 @@ export function ContactForm() {
                 subject: "",
                 message: "",
             });
-        } catch (error) {
-            setSubmitStatus("error");
-        } finally {
-            setIsSubmitting(false);
+
+            // Tự động ẩn thông báo thành công sau 5 giây
             setTimeout(() => {
                 setSubmitStatus("idle");
             }, 5000);
+        } catch (error: any) {
+            setSubmitStatus("error");
+            console.error("Submit contact error:", error);
+
+            if (error.response?.data?.message) {
+                const msg = error.response.data.message;
+
+                if (Array.isArray(msg)) {
+                    const newErrors: Record<string, string> = {};
+                    msg.forEach((err: string) => {
+                        if (err.toLowerCase().includes("email")) newErrors.email = err;
+                        else if (err.toLowerCase().includes("name")) newErrors.name = err;
+                        else if (err.toLowerCase().includes("phone")) newErrors.phone = err;
+                        else if (err.toLowerCase().includes("subject")) newErrors.subject = err;
+                        else if (err.toLowerCase().includes("message")) newErrors.message = err;
+                        else setGeneralError(prev => prev ? `${prev}, ${err}` : err);
+                    });
+
+                    if (Object.keys(newErrors).length > 0) {
+                        setErrors(newErrors);
+                    } else if (!generalError) {
+                        setGeneralError(msg.join(", "));
+                    }
+                } else {
+                    setGeneralError(msg);
+                }
+            } else {
+                setGeneralError("Có lỗi xảy ra. Vui lòng thử lại sau.");
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
+
+
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-8 h-full">
@@ -61,12 +130,12 @@ export function ContactForm() {
                 </div>
             )}
 
-            {submitStatus === "error" && (
+            {submitStatus === "error" && generalError && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 flex items-center">
                     <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Có lỗi xảy ra. Vui lòng thử lại sau.</span>
+                    <span>{generalError}</span>
                 </div>
             )}
 
@@ -81,6 +150,7 @@ export function ContactForm() {
                         value={formData.name}
                         onChange={handleChange}
                         required
+                        error={errors.name}
                     />
 
                     <FormField
@@ -92,6 +162,7 @@ export function ContactForm() {
                         value={formData.email}
                         onChange={handleChange}
                         required
+                        error={errors.email}
                     />
                 </div>
 
@@ -104,6 +175,7 @@ export function ContactForm() {
                         placeholder="090 123 4567"
                         value={formData.phone}
                         onChange={handleChange}
+                        error={errors.phone}
                     />
 
                     <FormField
@@ -115,6 +187,7 @@ export function ContactForm() {
                         value={formData.subject}
                         onChange={handleChange}
                         required
+                        error={errors.subject}
                     />
                 </div>
 
@@ -128,6 +201,7 @@ export function ContactForm() {
                     onChange={handleChange}
                     required
                     rows={5}
+                    error={errors.message}
                 />
 
                 <div className="pt-4">

@@ -178,3 +178,22 @@ export interface PostStatisticsOverview {
   }[];
 }
 
+export interface ContactPayload {
+  name: string;
+  email: string;
+  message: string;
+  phone?: string;
+  subject?: string;
+}
+
+export interface ContactResponse {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  phone: string;
+  status: string;
+  createdAt: string;
+}
+
