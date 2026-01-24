@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+
 import { useAdminListPage } from "@/hooks/useAdminListPage";
 import { adminEndpoints } from "@/lib/api/endpoints";
 import SkeletonLoader from "@/components/ui/feedback/SkeletonLoader";
@@ -141,11 +141,9 @@ export default function AdminPartners({
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {item.logo ? (
-                        <Image
+                        <img
                           src={item.logo}
                           alt={item.name}
-                          width={100}
-                          height={50}
                           className="h-12 w-auto object-contain"
                         />
                       ) : (

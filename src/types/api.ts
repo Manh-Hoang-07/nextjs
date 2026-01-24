@@ -39,7 +39,7 @@ export interface TeamMember {
 }
 
 export interface Partner {
-  id: string;
+  id: string | number;
   name: string;
   logo: string;
   website: string;

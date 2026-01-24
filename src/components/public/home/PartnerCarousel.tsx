@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+
 import { Partner } from "@/types/api";
 
 interface PartnerCarouselProps {
@@ -46,14 +46,18 @@ export function PartnerCarousel({ partners }: PartnerCarouselProps) {
                     {Array.from({ length: Math.ceil(partners.length / itemsPerViewPartner) }).map((_, pageIdx) => (
                         <div key={pageIdx} className="min-w-full flex justify-around items-center gap-8 md:gap-16 px-4">
                             {partners.slice(pageIdx * itemsPerViewPartner, (pageIdx + 1) * itemsPerViewPartner).map(partner => (
-                                <div key={partner.id} className="w-32 h-16 relative grayscale hover:grayscale-0 transition-all duration-300 opacity-60 hover:opacity-100" title={partner.name}>
-                                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xl">
-                                        {partner.logo ? (
-                                            <Image src={partner.logo} alt={partner.name} width={128} height={64} className="max-w-full max-h-full object-contain" unoptimized />
-                                        ) : (
-                                            <span>{partner.name.substring(0, 3)}</span>
-                                        )}
-                                    </div>
+                                <div key={partner.id} className="w-32 h-16 relative flex items-center justify-center transition-all duration-300 hover:scale-105" title={partner.name}>
+                                    {partner.logo ? (
+                                        <img
+                                            src={partner.logo}
+                                            alt={partner.name}
+                                            className="max-w-full max-h-full object-contain"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xl border-2 border-dashed border-gray-200 rounded">
+                                            {partner.name.substring(0, 3)}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
