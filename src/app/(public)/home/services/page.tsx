@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/navigation/Button";
-import { PageBanner } from "@/components/ui/navigation/PageBanner";
 import { ServiceFilter } from "@/components/public/services/ServiceFilter";
 import { Metadata } from "next";
+import HeroBanner from "@/components/public/banners/HeroBanner";
 
 export const metadata: Metadata = {
   title: "Dịch vụ",
@@ -102,13 +102,9 @@ export default async function ServicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <PageBanner
-        title="Dịch vụ của chúng tôi"
-        subtitle="Giải pháp công nghệ toàn diện giúp doanh nghiệp phát triển bền vững"
-        backgroundImage="https://images.unsplash.com/photo-1504384308090-c54be3852f33?auto=format&fit=crop&q=80"
-      />
+      <HeroBanner locationCode="service" imageOnly={true} />
 
-      <div className="container mx-auto px-4 -mt-10 relative z-10">
+      <div className="container mx-auto px-4 mt-8 relative z-10">
         <ServiceFilter initialServices={services} />
 
         {/* CTA Section */}

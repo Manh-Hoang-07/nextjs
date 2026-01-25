@@ -3,6 +3,7 @@ import { publicEndpoints } from "@/lib/api/endpoints";
 import { CertificateList } from "@/components/public/certificates/CertificateList";
 import { Metadata } from "next";
 import { Button } from "@/components/ui/navigation/Button";
+import HeroBanner from "@/components/public/banners/HeroBanner";
 
 export const metadata: Metadata = {
   title: "Chứng chỉ & Giấy phép",
@@ -24,15 +25,7 @@ export default async function CertificatesPage() {
     <div className="p-6">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Chứng chỉ của chúng tôi</h1>
 
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg p-8 mb-12 text-white">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-4">Chứng chỉ và xác nhận chuyên môn</h2>
-          <p className="text-lg">
-            Chúng tôi liên tục cập nhật kiến thức và kỹ năng thông qua các chứng chỉ uy tín trong ngành.
-          </p>
-        </div>
-      </div>
+      <HeroBanner locationCode="certificate" imageOnly={true} />
 
       <CertificateList initialCertificates={certificates} />
 

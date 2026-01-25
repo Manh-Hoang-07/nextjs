@@ -59,6 +59,7 @@ export const publicEndpoints = {
     },
     certificates: {
         list: "/api/certificates",
+        show: (id: Id) => `/api/certificates/${id}`,
         getByType: (type: string) => `/api/certificates/type/${type}`,
     },
     faqs: {

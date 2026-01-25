@@ -2,29 +2,30 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/navigation/Button";
-import Modal from "@/components/ui/feedback/Modal";
 import api from "@/lib/api/client";
 import { publicEndpoints } from "@/lib/api/endpoints";
+import HeroBanner from "@/components/public/banners/HeroBanner";
 
 interface GalleryItem {
-    id: string;
+    id: number;
     title: string;
+    slug: string;
     description: string;
-    image: string;
-    category: string;
-    date: string;
-    featured?: boolean;
+    cover_image: string;
+    images: string[];
+    featured: boolean;
+    status: string;
+    category?: string; // Optional if missing
+    date?: string;     // Optional
 }
 
 export default function GalleryClient() {
     const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
     const [filteredItems, setFilteredItems] = useState<GalleryItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [filters, setFilters] = useState({
-        category: "all",
         search: "",
     });
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -53,11 +54,6 @@ export default function GalleryClient() {
     useEffect(() => {
         let filtered = [...galleryItems];
 
-        // Filter by category
-        if (filters.category !== "all") {
-            filtered = filtered.filter(item => item.category === filters.category);
-        }
-
         // Filter by search
         if (filters.search) {
             const searchLower = filters.search.toLowerCase();
@@ -69,13 +65,6 @@ export default function GalleryClient() {
 
         setFilteredItems(filtered);
     }, [galleryItems, filters]);
-
-    const openItemModal = (item: GalleryItem) => {
-        setSelectedItem(item);
-        setIsModalOpen(true);
-    };
-
-    const categories = Array.from(new Set(galleryItems.map(item => item.category)));
 
     if (isLoading) {
         return (
@@ -92,15 +81,7 @@ export default function GalleryClient() {
         <div className="p-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">Thư viện dự án</h1>
 
-            {/* Hero Section */}
-            <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg p-8 mb-12 text-white">
-                <div className="max-w-3xl mx-auto text-center">
-                    <h2 className="text-2xl font-bold mb-4">Khám phá các dự án của chúng tôi</h2>
-                    <p className="text-lg">
-                        Xem qua các thiết kế và giải pháp chúng tôi đã tạo cho khách hàng.
-                    </p>
-                </div>
-            </div>
+            <HeroBanner locationCode="gallery" imageOnly={true} containerClass="mb-12" />
 
             {/* Filters and View Mode */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -119,24 +100,6 @@ export default function GalleryClient() {
                                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                             />
-                        </div>
-
-                        <div>
-                            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                                Danh mục
-                            </label>
-                            <select
-                                id="category"
-                                name="category"
-                                value={filters.category}
-                                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                            >
-                                <option value="all">Tất cả</option>
-                                {categories.map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
                         </div>
                     </div>
 
@@ -170,15 +133,21 @@ export default function GalleryClient() {
             ) : viewMode === "grid" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredItems.map((item) => (
-                        <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden group">
+                        <div key={item.id || Math.random()} className="bg-white rounded-lg shadow-md overflow-hidden group">
                             <div className="h-64 bg-gray-200 relative overflow-hidden">
-                                <Image
-                                    src={item.image}
-                                    alt={item.title}
-                                    width={500}
-                                    height={400}
-                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
+                                {item.cover_image ? (
+                                    <Image
+                                        src={item.cover_image}
+                                        alt={item.title || "Project Image"}
+                                        width={500}
+                                        height={400}
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                ) : (
+                                    <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-500">
+                                        <span className="text-4xl">🖼️</span>
+                                    </div>
+                                )}
                                 {item.featured && (
                                     <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 text-xs rounded font-bold">
                                         Nổi bật
@@ -189,13 +158,12 @@ export default function GalleryClient() {
                                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
                                 <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-500">{item.category}</span>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => openItemModal(item)}
-                                    >
-                                        Xem chi tiết
-                                    </Button>
+                                    <span className="text-sm text-gray-500">{item.category || "Dự án"}</span>
+                                    <Link href={`/home/gallery/${item.slug || item.id}`} className="inline-block">
+                                        <Button size="sm">
+                                            Xem chi tiết
+                                        </Button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -204,15 +172,21 @@ export default function GalleryClient() {
             ) : (
                 <div className="space-y-6">
                     {filteredItems.map((item) => (
-                        <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden flex group">
+                        <div key={item.id || Math.random()} className="bg-white rounded-lg shadow-md overflow-hidden flex group">
                             <div className="w-48 h-48 bg-gray-200 flex-shrink-0 relative overflow-hidden">
-                                <Image
-                                    src={item.image}
-                                    alt={item.title}
-                                    width={200}
-                                    height={200}
-                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
+                                {item.cover_image ? (
+                                    <Image
+                                        src={item.cover_image}
+                                        alt={item.title || "Project Image"}
+                                        width={200}
+                                        height={200}
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                ) : (
+                                    <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-500">
+                                        <span className="text-4xl">🖼️</span>
+                                    </div>
+                                )}
                                 {item.featured && (
                                     <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 text-xs rounded font-bold">
                                         Nổi bật
@@ -226,72 +200,18 @@ export default function GalleryClient() {
                                 </div>
                                 <p className="text-gray-600 mb-4">{item.description}</p>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-500">{item.category}</span>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => openItemModal(item)}
-                                    >
-                                        Xem chi tiết
-                                    </Button>
+                                    <span className="text-sm text-gray-500">{item.category || "Dự án"}</span>
+                                    <Link href={`/home/gallery/${item.slug || item.id}`} className="inline-block">
+                                        <Button size="sm">
+                                            Xem chi tiết
+                                        </Button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
-
-            {/* Item Detail Modal */}
-            <Modal
-                show={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={selectedItem?.title}
-                size="lg"
-            >
-                {selectedItem && (
-                    <div>
-                        <div className="h-96 bg-gray-200 mb-6 rounded-lg overflow-hidden">
-                            <Image
-                                src={selectedItem.image}
-                                alt={selectedItem.title}
-                                width={800}
-                                height={600}
-                                className="h-full w-full object-cover"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div>
-                                <h4 className="font-medium text-gray-900 mb-2">Thông tin dự án</h4>
-                                <div className="space-y-2 text-sm">
-                                    <p><span className="font-medium">Danh mục:</span> {selectedItem.category}</p>
-                                    <p><span className="font-medium">Ngày:</span> {selectedItem.date}</p>
-                                    {selectedItem.featured && (
-                                        <p><span className="font-medium">Trạng thái:</span>
-                                            <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                                                Nổi bật
-                                            </span>
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div>
-                                <h4 className="font-medium text-gray-900 mb-2">Mô tả chi tiết</h4>
-                                <p className="text-gray-600">{selectedItem.description}</p>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-2">
-                            <Button
-                                variant="secondary"
-                                onClick={() => setIsModalOpen(false)}
-                            >
-                                Đóng
-                            </Button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
 
             {/* CTA Section */}
             <div className="mt-16 bg-gray-100 rounded-lg p-8 text-center">

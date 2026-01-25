@@ -1,4 +1,4 @@
-import { PageBanner } from "@/components/ui/navigation/PageBanner";
+
 import { serverFetch } from "@/lib/api/server-client";
 import { publicEndpoints } from "@/lib/api/endpoints";
 import { ProjectFilter } from "@/components/public/projects/ProjectFilter";
@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/navigation/Button";
 import { Suspense } from "react";
 import { Metadata } from "next";
+import HeroBanner from "@/components/public/banners/HeroBanner";
 
 export const metadata: Metadata = {
   title: "Dự án",
@@ -63,13 +64,9 @@ function ProjectSkeleton() {
 export default function ProjectsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <PageBanner
-        title="Dự án tiêu biểu"
-        subtitle="Khám phá những công trình và sản phẩm công nghệ chúng tôi đã thực hiện"
-        backgroundImage="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80"
-      />
+      <HeroBanner locationCode="project" imageOnly={true} />
 
-      <div className="container mx-auto px-4 -mt-10 relative z-10">
+      <div className="container mx-auto px-4 mt-8 relative z-10">
         <Suspense fallback={<ProjectSkeleton />}>
           <ProjectList />
         </Suspense>

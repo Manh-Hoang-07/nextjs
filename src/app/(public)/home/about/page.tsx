@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/navigation/Button";
 import Image from "next/image";
 import { Metadata } from "next";
+import HeroBanner from "@/components/public/banners/HeroBanner";
 
 export const metadata: Metadata = {
   title: "Về chúng tôi",
@@ -22,16 +23,7 @@ export default async function AboutPage() {
     <div className="p-6">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Về chúng tôi</h1>
 
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-8 mb-12 text-white">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-4">Chào mừng đến với công ty của chúng tôi</h2>
-          <p className="text-lg">
-            Chúng tôi là đội ngũ chuyên gia tận tâm, cam kết mang đến những giải pháp thực tế
-            và chất lượng vượt trội.
-          </p>
-        </div>
-      </div>
+      <HeroBanner locationCode="about" imageOnly={true} containerClass="mb-12" />
 
       {/* About Sections */}
       <div className="space-y-12 mb-16">

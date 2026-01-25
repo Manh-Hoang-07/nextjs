@@ -1,5 +1,5 @@
-import { PageBanner } from "@/components/ui/navigation/PageBanner";
 import { ContactForm } from "@/components/public/contact/ContactForm";
+import HeroBanner from "@/components/public/banners/HeroBanner";
 import { Metadata } from "next";
 import { getSystemConfig } from "@/lib/api/public";
 import { SystemConfig } from "@/types/api";
@@ -14,13 +14,9 @@ export default async function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <PageBanner
-        title="Liên Hệ Với Chúng Tôi"
-        subtitle="Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn"
-        backgroundImage="https://images.unsplash.com/photo-1423666639041-f142fcb9337f?auto=format&fit=crop&q=80"
-      />
+      <HeroBanner locationCode="contact" imageOnly={true} />
 
-      <div className="container mx-auto px-4 -mt-10 relative z-10">
+      <div className="container mx-auto px-4 mt-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contact Info Cards */}
           <div className="lg:col-span-1 space-y-4">
