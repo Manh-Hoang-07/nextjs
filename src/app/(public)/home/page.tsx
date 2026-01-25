@@ -69,7 +69,7 @@ export default async function LandingPage() {
 
       {/* Hero Banner Section */}
       <HeroBanner
-        locationCode="home_slider"
+        locationCode="home"
         containerClass="mb-0"
       />
 
