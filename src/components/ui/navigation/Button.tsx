@@ -8,6 +8,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: Size;
   children: ReactNode;
   isLoading?: boolean;
+  glow?: boolean;
 }
 
 const base =
@@ -29,10 +30,20 @@ const sizes: Record<Size, string> = {
   lg: "h-11 rounded-md px-8",
 };
 
-export function Button({ variant = "primary", size = "md", className = "", isLoading = false, children, ...props }: ButtonProps) {
+export function Button({
+  variant = "primary",
+  size = "md",
+  className = "",
+  isLoading = false,
+  glow = false,
+  children,
+  ...props
+}: ButtonProps) {
+  const glowClass = glow ? "shadow-lg shadow-primary/20 hover:shadow-primary/40" : "";
+
   return (
     <button
-      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${glowClass} ${className}`}
       disabled={isLoading || props.disabled}
       {...props}
     >

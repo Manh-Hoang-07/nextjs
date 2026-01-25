@@ -39,6 +39,14 @@ interface RegisterData {
   phone?: string;
   password: string;
   confirmPassword: string;
+  otp: string;
+}
+
+interface ResetPasswordData {
+  email: string;
+  otp: string;
+  password: string;
+  confirmPassword: string;
 }
 
 interface ApiResponse<T = any> {
@@ -67,6 +75,9 @@ interface AuthState {
 interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<AuthResult>;
   register: (data: RegisterData) => Promise<AuthResult>;
+  sendOtpRegister: (email: string) => Promise<AuthResult>;
+  sendOtpForgotPassword: (email: string) => Promise<AuthResult>;
+  resetPassword: (data: ResetPasswordData) => Promise<AuthResult>;
   logout: () => Promise<void>;
   fetchUserInfo: (force?: boolean) => Promise<void>;
   checkAuth: () => Promise<boolean>;
@@ -201,7 +212,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         try {
           const response = await apiClient.post(userEndpoints.auth.register, data);
 
-          if (response.data.success) {
+          if (response.data.success || response.status === 201) {
             return {
               success: true,
               data: response.data.data,
@@ -219,7 +230,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           if (error.response?.status === 400) {
             return {
               success: false,
-              message: error.response?.data?.message || "Validation failed",
+              message: error.response?.data?.message || "Dữ liệu không hợp lệ",
               errors: error.response?.data?.errors,
             };
           } else if (error.response?.status === 422) {
@@ -242,7 +253,58 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
           return {
             success: false,
-            message: error.userMessage || "Lỗi kết nối",
+            message: error.response?.data?.message || error.userMessage || "Lỗi kết nối",
+          };
+        }
+      },
+
+      sendOtpRegister: async (email: string): Promise<AuthResult> => {
+        try {
+          const response = await apiClient.post(userEndpoints.auth.sendOtpRegister, { email });
+
+          return {
+            success: true,
+            message: response.data.message || "Mã OTP đã được gửi đến email của bạn.",
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            message: error.response?.data?.message || "Không thể gửi OTP. Vui lòng thử lại sau.",
+            errors: error.response?.data?.errors,
+          };
+        }
+      },
+
+      sendOtpForgotPassword: async (email: string): Promise<AuthResult> => {
+        try {
+          const response = await apiClient.post(userEndpoints.auth.sendOtpForgotPassword, { email });
+
+          return {
+            success: true,
+            message: response.data.message || "Mã OTP đã được gửi đến email của bạn.",
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            message: error.response?.data?.message || "Email không tồn tại hoặc lỗi server.",
+            errors: error.response?.data?.errors,
+          };
+        }
+      },
+
+      resetPassword: async (data: ResetPasswordData): Promise<AuthResult> => {
+        try {
+          const response = await apiClient.post(userEndpoints.auth.resetPassword, data);
+
+          return {
+            success: true,
+            message: response.data.message || "Đổi mật khẩu thành công.",
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            message: error.response?.data?.message || "Mã OTP sai hoặc hết hạn.",
+            errors: error.response?.data?.errors,
           };
         }
       },

@@ -4,6 +4,9 @@ export const userEndpoints = {
     auth: {
         login: "/api/auth/login",
         register: "/api/auth/register",
+        sendOtpRegister: "/api/auth/register/send-otp",
+        sendOtpForgotPassword: "/api/auth/forgot-password/send-otp",
+        resetPassword: "/api/auth/reset-password",
         logout: "/api/auth/logout",
         refresh: "/api/auth/refresh",
     },

@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/navigation/Button";
 import FormField from "@/components/ui/forms/FormField";
 import { useAuthStore } from "@/lib/store/authStore";
+import { useToastContext } from "@/contexts/ToastContext";
 
 // 1. Khai báo schema validate (Declarative Validation)
 const loginSchema = z.object({
@@ -21,9 +23,9 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuthStore();
+  const { showError } = useToastContext();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
 
   // 2. Sử dụng react-hook-form
   const {
@@ -42,7 +44,6 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    setServerError(null);
 
     try {
       const result = await login({
@@ -62,13 +63,12 @@ export default function LoginPage() {
               setError(key as any, { message: messages[0] });
             }
           });
-        } else {
-          setServerError(result.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
         }
+        showError(result.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setServerError("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+      showError("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
     } finally {
       setIsLoading(false);
     }
@@ -83,19 +83,13 @@ export default function LoginPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Hoặc{" "}
-            <a href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
               đăng ký tài khoản mới
-            </a>
+            </Link>
           </p>
         </div>
 
         <div className="bg-white py-8 px-6 shadow rounded-lg">
-          {serverError && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm animate-in fade-in duration-300">
-              {serverError}
-            </div>
-          )}
-
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <FormField
               label="Email"
@@ -142,9 +136,9 @@ export default function LoginPage() {
               />
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link href="/auth/forgot-password" title="Quên mật khẩu" className="font-medium text-blue-600 hover:text-blue-500">
                   Quên mật khẩu?
-                </a>
+                </Link>
               </div>
             </div>
 

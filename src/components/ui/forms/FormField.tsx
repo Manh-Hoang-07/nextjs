@@ -43,6 +43,7 @@ interface FormFieldProps {
 
   // Checkbox specific
   checkboxLabel?: React.ReactNode;
+  noLabel?: boolean;
 }
 
 const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, FormFieldProps>(
@@ -71,6 +72,7 @@ const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelect
     options = [],
     multiple = false,
     checkboxLabel,
+    noLabel = false,
     ...rest
   }, ref) => {
     const generatedId = useId();
@@ -195,7 +197,7 @@ const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelect
 
     return (
       <div className={`form-field w-full ${className}`}>
-        {label && type !== "checkbox" && (
+        {label && type !== "checkbox" && !noLabel && (
           <label htmlFor={fieldId} className={`block text-sm font-semibold mb-1.5 text-gray-700 ${labelClass}`}>
             {label}
             {required && <span className="text-red-500 ml-1">*</span>}
