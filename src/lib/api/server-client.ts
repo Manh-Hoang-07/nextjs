@@ -39,7 +39,6 @@ export async function serverFetch<T = any>(
             } catch (e) {
                 // cookies() was called outside a request context (e.g. during static generation)
                 // This is fine for public data, we just won't have the token/groupId
-                console.log(`[Server Fetch] Skipping cookies for static generation: ${endpoint}`);
             }
         }
 
@@ -67,7 +66,6 @@ export async function serverFetch<T = any>(
         const { revalidate, tags, ...restOptions } = options;
 
         const start = Date.now();
-        // console.log(`[API Fetch] START ${cleanEndpoint}`); // Commented to reduce noise
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 sec timeout
@@ -93,7 +91,6 @@ export async function serverFetch<T = any>(
         // Chỉ log slow requests hoặc errors
         if (duration > 1000 || !response.ok) {
             const level = response.ok ? 'SLOW' : 'ERROR';
-            console.log(`[API Fetch] ${level} ${options.method || 'GET'} ${cleanEndpoint} - ${statusStr} [${duration}ms]`);
         }
 
         if (!response.ok) {

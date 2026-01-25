@@ -138,7 +138,7 @@ export function PostList({ initialPosts, categories }: PostListProps) {
                         </div>
                     </div>
 
-                    <div className="flex gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                    <div className="flex gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-thin">
                         <button
                             onClick={() => setFilters({ ...filters, category: "all" })}
                             className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-colors ${filters.category === "all" ? "bg-primary text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}

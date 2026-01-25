@@ -5,6 +5,7 @@ import DataTable from "@/components/ui/data-display/DataTable";
 import { Button } from "@/components/ui/navigation/Button";
 import FormField from "@/components/ui/forms/FormField";
 import Modal from "@/components/ui/feedback/Modal";
+import { useToastContext } from "@/contexts/ToastContext";
 
 interface User {
   id: string;
@@ -20,6 +21,7 @@ export default function AdminUsersPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { showSuccess, showError } = useToastContext();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -60,8 +62,7 @@ export default function AdminUsersPage() {
 
   const handleCreateUser = () => {
     // In real app, this would call API
-    console.log("Creating user:", formData);
-    
+
     // Reset form
     setFormData({
       name: "",
@@ -69,24 +70,23 @@ export default function AdminUsersPage() {
       role: "user",
       password: "",
     });
-    
+
     // Close modal
     setIsCreateModalOpen(false);
-    
+
     // Show success message (in real app, this would be a toast)
-    alert("User created successfully!");
+    showSuccess("User created successfully!");
   };
 
   const handleEditUser = () => {
     if (!selectedUser) return;
-    
+
     // In real app, this would call API
-    console.log("Updating user:", { ...selectedUser, ...formData });
-    
+
     // Close modal
     setIsEditModalOpen(false);
     setSelectedUser(null);
-    
+
     // Reset form
     setFormData({
       name: "",
@@ -94,21 +94,20 @@ export default function AdminUsersPage() {
       role: "user",
       password: "",
     });
-    
+
     // Show success message (in real app, this would be a toast)
-    alert("User updated successfully!");
+    showSuccess("User updated successfully!");
   };
 
   const handleDeleteUser = (userId: string) => {
     // In real app, this would call API
-    console.log("Deleting user:", userId);
-    
+
     // Show confirmation dialog
     if (confirm("Are you sure you want to delete this user?")) {
       setUsers(users.filter(user => user.id !== userId));
-      
+
       // Show success message (in real app, this would be a toast)
-      alert("User deleted successfully!");
+      showSuccess("User deleted successfully!");
     }
   };
 
@@ -126,7 +125,7 @@ export default function AdminUsersPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Users Management</h1>
-      
+
       <div className="bg-white shadow rounded-lg">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -136,7 +135,7 @@ export default function AdminUsersPage() {
             </Button>
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -180,11 +179,10 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3">{user.name}</td>
                   <td className="px-4 py-3">{user.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      user.role === "admin"
-                        ? "bg-purple-100 text-purple-800"
-                        : "bg-green-100 text-green-800"
-                    }`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${user.role === "admin"
+                      ? "bg-purple-100 text-purple-800"
+                      : "bg-green-100 text-green-800"
+                      }`}>
                       {user.role}
                     </span>
                   </td>
@@ -231,7 +229,7 @@ export default function AdminUsersPage() {
             onChange={(value) => setFormData({ ...formData, name: value })}
             required
           />
-          
+
           <FormField
             id="email"
             name="email"
@@ -241,7 +239,7 @@ export default function AdminUsersPage() {
             onChange={(value) => setFormData({ ...formData, email: value })}
             required
           />
-          
+
           <FormField
             id="role"
             name="role"
@@ -255,7 +253,7 @@ export default function AdminUsersPage() {
             ]}
             required
           />
-          
+
           <FormField
             id="password"
             name="password"
@@ -266,7 +264,7 @@ export default function AdminUsersPage() {
             required
           />
         </div>
-        
+
         <div className="flex justify-end space-x-2 pt-4">
           <Button
             variant="secondary"
@@ -297,7 +295,7 @@ export default function AdminUsersPage() {
             onChange={(value) => setFormData({ ...formData, name: value })}
             required
           />
-          
+
           <FormField
             id="email"
             name="email"
@@ -307,7 +305,7 @@ export default function AdminUsersPage() {
             onChange={(value) => setFormData({ ...formData, email: value })}
             required
           />
-          
+
           <FormField
             id="role"
             name="role"
@@ -322,7 +320,7 @@ export default function AdminUsersPage() {
             required
           />
         </div>
-        
+
         <div className="flex justify-end space-x-2 pt-4">
           <Button
             variant="secondary"

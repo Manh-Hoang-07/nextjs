@@ -34,7 +34,7 @@ export async function middleware(req: NextRequest) {
 
   const duration = Date.now() - start;
   if (duration > 50) {
-    console.log(`[Middleware] ${pathname} took ${duration}ms`);
+    // Took too long
   }
 
   return response;

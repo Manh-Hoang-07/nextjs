@@ -26,13 +26,10 @@ export function PublicLayoutWrapper({
             {/* Main Content */}
             <main
                 key="main-content"
-                className={`flex-1 min-h-screen ${pathname?.startsWith('/home/services') ||
-                    pathname?.startsWith('/home/projects') ||
-                    pathname?.startsWith('/home/posts') ||
-                    pathname?.startsWith('/home/contact')
-                    ? ''
-                    : 'pt-20'
-                    }`}>{children}</main>
+                className="flex-1 min-h-screen pt-20"
+            >
+                {children}
+            </main>
 
             <React.Fragment key="footer-section">{footer}</React.Fragment>
             <FloatingContactChannels key="floating-channels" channels={contactChannels} />

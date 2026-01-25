@@ -2,102 +2,207 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/navigation/Button";
 import FormField from "@/components/ui/forms/FormField";
 import Modal from "@/components/ui/feedback/Modal";
+import { userService } from "@/services/user.service";
+import { useAuthStore } from "@/lib/store/authStore";
+import { useToastContext } from "@/contexts/ToastContext";
 
+// ===== TYPES =====
 interface UserProfile {
-    id: string;
-    name: string;
+    id: number;
+    name?: string;
     email: string;
-    phone: string;
-    address: string;
-    bio: string;
-    avatar: string;
-    createdAt: string;
+    phone?: string;
+    address?: string;
+    about?: string;
+    image?: string;
+    birthday?: string;
+    gender?: string;
+    created_at?: string;
 }
 
+// ===== VALIDATION SCHEMAS =====
+
+// Schema cho form cập nhật profile
+const updateProfileSchema = z.object({
+    name: z.string().min(1, "Họ và tên là bắt buộc").max(100, "Họ và tên tối đa 100 ký tự"),
+    birthday: z.string().optional(),
+    gender: z.string().optional(),
+    address: z.string().max(255, "Địa chỉ tối đa 255 ký tự").optional(),
+    about: z.string().max(1000, "Giới thiệu tối đa 1000 ký tự").optional(),
+});
+
+type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;
+
+// Schema cho form đổi mật khẩu
+const changePasswordSchema = z.object({
+    currentPassword: z.string().min(1, "Mật khẩu hiện tại là bắt buộc"),
+    newPassword: z.string()
+        .min(1, "Mật khẩu mới là bắt buộc")
+        .min(6, "Mật khẩu mới phải có ít nhất 6 ký tự")
+        .max(100, "Mật khẩu mới quá dài"),
+    confirmPassword: z.string().min(1, "Xác nhận mật khẩu là bắt buộc"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+});
+
+type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
+
+// ===== COMPONENT =====
 export default function UserProfileClient() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        bio: "",
-    });
-    const [passwordData, setPasswordData] = useState({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const { showSuccess, showError } = useToastContext();
+
+    // Form cho cập nhật profile
+    const {
+        register: registerProfile,
+        handleSubmit: handleSubmitProfile,
+        reset: resetProfile,
+        formState: { errors: profileErrors },
+    } = useForm<UpdateProfileFormValues>({
+        resolver: zodResolver(updateProfileSchema),
     });
 
-    // Mock data - in real app, this would be fetched from API
+    // Form cho đổi mật khẩu
+    const {
+        register: registerPassword,
+        handleSubmit: handleSubmitPassword,
+        reset: resetPassword,
+        formState: { errors: passwordErrors },
+    } = useForm<ChangePasswordFormValues>({
+        resolver: zodResolver(changePasswordSchema),
+    });
+
+    // Fetch user profile from API
     useEffect(() => {
-        // Simulate API call
-        setTimeout(() => {
-            setProfile({
-                id: "1",
-                name: "John Doe",
-                email: "john@example.com",
-                phone: "+1234567890",
-                address: "123 Main St, Anytown, USA",
-                bio: "I am a software developer with a passion for creating amazing web applications.",
-                avatar: "/images/user1.jpg",
-                createdAt: "2023-01-15",
-            });
-            setIsLoading(false);
-        }, 1000);
+        const fetchProfile = async () => {
+            try {
+                const response = await userService.getProfile();
+
+                if (response.success && response.data) {
+                    // Flatten profile data
+                    const userData = {
+                        ...response.data,
+                        name: response.data.profile?.name || response.data.name,
+                        image: response.data.profile?.image || response.data.image,
+                        birthday: response.data.profile?.birthday || response.data.birthday,
+                        gender: response.data.profile?.gender || response.data.gender,
+                        address: response.data.profile?.address || response.data.address,
+                        about: response.data.profile?.about || response.data.about,
+                    };
+                    setProfile(userData);
+                }
+            } catch (error) {
+                console.error("Failed to fetch profile:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProfile();
     }, []);
 
-    const handleUpdateProfile = () => {
+    // Handler: Cập nhật profile
+    const onSubmitProfile = async (data: UpdateProfileFormValues) => {
         if (!profile) return;
 
-        // In real app, this would call API
-        console.log("Updating profile:", { ...profile, ...formData });
+        setIsUpdating(true);
+        try {
+            const response = await userService.updateProfile({
+                name: data.name,
+                birthday: data.birthday || undefined,
+                gender: data.gender || undefined,
+                address: data.address || undefined,
+                about: data.about || undefined,
+            });
 
-        // Update local state
-        setProfile({ ...profile, ...formData });
+            if (response.success && response.data) {
+                // Update local state with flattened data
+                const updatedProfile = {
+                    ...response.data,
+                    name: response.data.profile?.name || response.data.name,
+                    image: response.data.profile?.image || response.data.image,
+                    birthday: response.data.profile?.birthday || response.data.birthday,
+                    gender: response.data.profile?.gender || response.data.gender,
+                    address: response.data.profile?.address || response.data.address,
+                    about: response.data.profile?.about || response.data.about,
+                };
+                setProfile(updatedProfile);
 
-        // Close modal
-        setIsEditModalOpen(false);
+                // Update auth store
+                useAuthStore.getState().setUser(updatedProfile);
 
-        // Show success message (in real app, this would be a toast)
-        alert("Profile updated successfully!");
+                // Close modal
+                setIsEditModalOpen(false);
+
+                showSuccess(response.message || "Cập nhật thông tin thành công!");
+            }
+        } catch (error: any) {
+            showError(error.response?.data?.message || "Có lỗi xảy ra khi cập nhật thông tin");
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
-    const handleChangePassword = () => {
-        // In real app, this would call API
-        console.log("Changing password:", passwordData);
+    // Handler: Đổi mật khẩu
+    const onSubmitPassword = async (data: ChangePasswordFormValues) => {
+        setIsChangingPassword(true);
+        try {
+            const response = await userService.changePassword({
+                old_password: data.currentPassword,
+                password: data.newPassword,
+                password_confirmation: data.confirmPassword,
+            });
 
-        // Reset form
-        setPasswordData({
+            if (response.success) {
+                // Reset form
+                resetPassword();
+
+                // Close modal
+                setIsPasswordModalOpen(false);
+
+                showSuccess(response.message || "Đổi mật khẩu thành công!");
+            }
+        } catch (error: any) {
+            showError(error.response?.data?.message || "Có lỗi xảy ra khi đổi mật khẩu");
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
+
+    // Open edit modal và populate form
+    const openEditModal = () => {
+        if (!profile) return;
+
+        resetProfile({
+            name: profile.name || "",
+            birthday: profile.birthday || "",
+            gender: profile.gender || "",
+            address: profile.address || "",
+            about: profile.about || "",
+        });
+        setIsEditModalOpen(true);
+    };
+
+    // Open password modal và reset form
+    const openPasswordModal = () => {
+        resetPassword({
             currentPassword: "",
             newPassword: "",
             confirmPassword: "",
         });
-
-        // Close modal
-        setIsPasswordModalOpen(false);
-
-        // Show success message (in real app, this would be a toast)
-        alert("Password changed successfully!");
-    };
-
-    const openEditModal = () => {
-        if (!profile) return;
-
-        setFormData({
-            name: profile.name,
-            email: profile.email,
-            phone: profile.phone,
-            address: profile.address,
-            bio: profile.bio,
-        });
-        setIsEditModalOpen(true);
+        setIsPasswordModalOpen(true);
     };
 
     if (isLoading) {
@@ -105,7 +210,7 @@ export default function UserProfileClient() {
             <div className="p-6">
                 <div className="flex justify-center items-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <p className="ml-2 text-gray-600">Loading profile...</p>
+                    <p className="ml-2 text-gray-600">Đang tải thông tin...</p>
                 </div>
             </div>
         );
@@ -115,7 +220,7 @@ export default function UserProfileClient() {
         return (
             <div className="p-6">
                 <div className="text-center py-12">
-                    <p className="text-gray-600">Profile not found.</p>
+                    <p className="text-gray-600">Không tìm thấy thông tin tài khoản.</p>
                 </div>
             </div>
         );
@@ -123,18 +228,18 @@ export default function UserProfileClient() {
 
     return (
         <div className="p-6 w-full">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-6">My Profile</h1>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-6">Thông tin cá nhân</h1>
 
             <div className="bg-white shadow rounded-lg">
                 <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
+                        <h2 className="text-lg font-medium text-gray-900">Thông tin tài khoản</h2>
                         <div className="flex space-x-2">
-                            <Button variant="secondary" onClick={() => setIsPasswordModalOpen(true)}>
-                                Change Password
+                            <Button variant="secondary" onClick={openPasswordModal}>
+                                Đổi mật khẩu
                             </Button>
                             <Button onClick={openEditModal}>
-                                Edit Profile
+                                Chỉnh sửa
                             </Button>
                         </div>
                     </div>
@@ -143,50 +248,60 @@ export default function UserProfileClient() {
                 <div className="p-6">
                     <div className="flex items-center mb-6">
                         <div className="flex-shrink-0 h-24 w-24 rounded-full bg-gray-300 flex items-center justify-center">
-                            {profile.avatar ? (
+                            {profile.image ? (
                                 <Image
-                                    src={profile.avatar}
-                                    alt={profile.name}
+                                    src={profile.image}
+                                    alt={profile.name || "User"}
                                     width={96}
                                     height={96}
                                     className="h-24 w-24 rounded-full object-cover"
                                 />
                             ) : (
                                 <span className="text-2xl font-medium text-gray-700">
-                                    {profile.name.charAt(0)}
+                                    {profile.name?.charAt(0) || "U"}
                                 </span>
                             )}
                         </div>
                         <div className="ml-6">
-                            <h3 className="text-xl font-medium text-gray-900">{profile.name}</h3>
-                            <p className="text-sm text-gray-500">Member since {profile.createdAt}</p>
+                            <h3 className="text-xl font-medium text-gray-900">{profile.name || "User"}</h3>
+                            <p className="text-sm text-gray-500">Thành viên từ {profile.created_at ? new Date(profile.created_at).toLocaleDateString("vi-VN") : "N/A"}</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-1">Full Name</h4>
-                            <p className="text-sm text-gray-900">{profile.name}</p>
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Họ và tên</h4>
+                            <p className="text-sm text-gray-900">{profile.name || "Chưa cập nhật"}</p>
                         </div>
 
                         <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-1">Email Address</h4>
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Email</h4>
                             <p className="text-sm text-gray-900">{profile.email}</p>
                         </div>
 
                         <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-1">Phone Number</h4>
-                            <p className="text-sm text-gray-900">{profile.phone || "Not provided"}</p>
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Số điện thoại</h4>
+                            <p className="text-sm text-gray-900">{profile.phone || "Chưa cập nhật"}</p>
                         </div>
 
                         <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-1">Address</h4>
-                            <p className="text-sm text-gray-900">{profile.address || "Not provided"}</p>
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Ngày sinh</h4>
+                            <p className="text-sm text-gray-900">{profile.birthday ? new Date(profile.birthday).toLocaleDateString("vi-VN") : "Chưa cập nhật"}</p>
+                        </div>
+
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Giới tính</h4>
+                            <p className="text-sm text-gray-900">{profile.gender === "male" ? "Nam" : profile.gender === "female" ? "Nữ" : profile.gender === "other" ? "Khác" : "Chưa cập nhật"}</p>
+                        </div>
+
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Địa chỉ</h4>
+                            <p className="text-sm text-gray-900">{profile.address || "Chưa cập nhật"}</p>
                         </div>
 
                         <div className="md:col-span-2">
-                            <h4 className="text-sm font-medium text-gray-500 mb-1">Bio</h4>
-                            <p className="text-sm text-gray-900">{profile.bio || "Not provided"}</p>
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Giới thiệu</h4>
+                            <p className="text-sm text-gray-900">{profile.about || "Chưa cập nhật"}</p>
                         </div>
                     </div>
                 </div>
@@ -196,122 +311,120 @@ export default function UserProfileClient() {
             <Modal
                 show={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
-                title="Edit Profile"
+                title="Chỉnh sửa thông tin"
                 size="lg"
             >
-                <div className="space-y-4">
+                <form onSubmit={handleSubmitProfile(onSubmitProfile)} className="space-y-4">
                     <FormField
-                        id="name"
-                        name="name"
-                        type="text"
-                        label="Full Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        label="Họ và tên"
+                        placeholder="Nhập họ và tên"
+                        {...registerProfile("name")}
+                        error={profileErrors.name?.message}
                         required
                     />
 
                     <FormField
-                        id="email"
-                        name="email"
-                        type="email"
-                        label="Email Address"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
+                        label="Ngày sinh"
+                        type="date"
+                        {...registerProfile("birthday")}
+                        error={profileErrors.birthday?.message}
+                    />
+
+                    <div className="space-y-1">
+                        <label className="block text-sm font-semibold text-gray-700">Giới tính</label>
+                        <select
+                            {...registerProfile("gender")}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                        >
+                            <option value="">Chọn giới tính</option>
+                            <option value="male">Nam</option>
+                            <option value="female">Nữ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                        {profileErrors.gender && (
+                            <p className="text-xs text-red-500">{profileErrors.gender.message}</p>
+                        )}
+                    </div>
+
+                    <FormField
+                        label="Địa chỉ"
+                        placeholder="Nhập địa chỉ của bạn"
+                        {...registerProfile("address")}
+                        error={profileErrors.address?.message}
                     />
 
                     <FormField
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        label="Phone Number"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
-
-                    <FormField
-                        id="address"
-                        name="address"
-                        type="text"
-                        label="Address"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    />
-
-                    <FormField
-                        id="bio"
-                        name="bio"
+                        label="Giới thiệu"
                         type="textarea"
-                        label="Bio"
-                        value={formData.bio}
-                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                         rows={4}
+                        placeholder="Viết một vài dòng giới thiệu về bản thân..."
+                        {...registerProfile("about")}
+                        error={profileErrors.about?.message}
                     />
-                </div>
 
-                <div className="flex justify-end space-x-2 pt-4">
-                    <Button
-                        variant="secondary"
-                        onClick={() => setIsEditModalOpen(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button onClick={handleUpdateProfile}>
-                        Update Profile
-                    </Button>
-                </div>
+                    <div className="flex justify-end space-x-2 pt-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setIsEditModalOpen(false)}
+                        >
+                            Hủy
+                        </Button>
+                        <Button type="submit" disabled={isUpdating}>
+                            {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
+                        </Button>
+                    </div>
+                </form>
             </Modal>
 
             {/* Change Password Modal */}
             <Modal
                 show={isPasswordModalOpen}
                 onClose={() => setIsPasswordModalOpen(false)}
-                title="Change Password"
+                title="Đổi mật khẩu"
                 size="md"
             >
-                <div className="space-y-4">
+                <form onSubmit={handleSubmitPassword(onSubmitPassword)} className="space-y-4">
                     <FormField
-                        id="currentPassword"
-                        name="currentPassword"
+                        label="Mật khẩu hiện tại"
                         type="password"
-                        label="Current Password"
-                        value={passwordData.currentPassword}
-                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                        placeholder="Nhập mật khẩu hiện tại"
+                        {...registerPassword("currentPassword")}
+                        error={passwordErrors.currentPassword?.message}
                         required
                     />
 
                     <FormField
-                        id="newPassword"
-                        name="newPassword"
+                        label="Mật khẩu mới"
                         type="password"
-                        label="New Password"
-                        value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                        placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+                        {...registerPassword("newPassword")}
+                        error={passwordErrors.newPassword?.message}
                         required
                     />
 
                     <FormField
-                        id="confirmPassword"
-                        name="confirmPassword"
+                        label="Xác nhận mật khẩu mới"
                         type="password"
-                        label="Confirm New Password"
-                        value={passwordData.confirmPassword}
-                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                        placeholder="Nhập lại mật khẩu mới"
+                        {...registerPassword("confirmPassword")}
+                        error={passwordErrors.confirmPassword?.message}
                         required
                     />
-                </div>
 
-                <div className="flex justify-end space-x-2 pt-4">
-                    <Button
-                        variant="secondary"
-                        onClick={() => setIsPasswordModalOpen(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button onClick={handleChangePassword}>
-                        Change Password
-                    </Button>
-                </div>
+                    <div className="flex justify-end space-x-2 pt-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setIsPasswordModalOpen(false)}
+                        >
+                            Hủy
+                        </Button>
+                        <Button type="submit" disabled={isChangingPassword}>
+                            {isChangingPassword ? "Đang xử lý..." : "Đổi mật khẩu"}
+                        </Button>
+                    </div>
+                </form>
             </Modal>
         </div>
     );

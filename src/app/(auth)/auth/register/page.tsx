@@ -56,7 +56,6 @@ export default function RegisterPage() {
 
     try {
       // TODO: Implement actual registration API call
-      console.log("Registering with:", data);
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       setSuccess("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...");

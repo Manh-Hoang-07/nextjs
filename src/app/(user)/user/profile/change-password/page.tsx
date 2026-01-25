@@ -7,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/navigation/Button";
 import FormField from "@/components/ui/forms/FormField";
+import { userService } from "@/services/user.service";
+import { useToastContext } from "@/contexts/ToastContext";
 
 // 1. Define Change Password Schema
 const changePasswordSchema = z.object({
@@ -22,6 +24,7 @@ type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 export default function UserChangePasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const { showSuccess, showError } = useToastContext();
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -45,14 +48,19 @@ export default function UserChangePasswordPage() {
     setSuccess(null);
 
     try {
-      // TODO: Implement API call to change password
-      console.log("Changing password with:", data);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await userService.changePassword({
+        old_password: data.currentPassword,
+        password: data.newPassword,
+        password_confirmation: data.confirmPassword,
+      });
 
-      setSuccess("Đổi mật khẩu thành công!");
-      reset();
+      if (response.success) {
+        showSuccess(response.message || "Đổi mật khẩu thành công!");
+        reset();
+      }
     } catch (err: any) {
-      setServerError(err.message || "Có lỗi xảy ra, vui lòng thử lại");
+      const errorMessage = err.response?.data?.message || err.message || "Có lỗi xảy ra, vui lòng thử lại";
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }

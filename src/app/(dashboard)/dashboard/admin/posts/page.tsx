@@ -5,6 +5,7 @@ import DataTable from "@/components/ui/data-display/DataTable";
 import { Button } from "@/components/ui/navigation/Button";
 import FormField from "@/components/ui/forms/FormField";
 import Modal from "@/components/ui/feedback/Modal";
+import { useToastContext } from "@/contexts/ToastContext";
 
 interface Post {
   id: string;
@@ -21,6 +22,7 @@ export default function AdminPostsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const { showSuccess, showError } = useToastContext();
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -64,8 +66,7 @@ export default function AdminPostsPage() {
 
   const handleCreatePost = () => {
     // In real app, this would call API
-    console.log("Creating post:", formData);
-    
+
     // Reset form
     setFormData({
       title: "",
@@ -73,24 +74,23 @@ export default function AdminPostsPage() {
       status: "draft",
       content: "",
     });
-    
+
     // Close modal
     setIsCreateModalOpen(false);
-    
-    // Show success message (in real app, this would be a toast)
-    alert("Post created successfully!");
+
+    // Show success message
+    showSuccess("Post created successfully!");
   };
 
   const handleEditPost = () => {
     if (!selectedPost) return;
-    
+
     // In real app, this would call API
-    console.log("Updating post:", { ...selectedPost, ...formData });
-    
+
     // Close modal
     setIsEditModalOpen(false);
     setSelectedPost(null);
-    
+
     // Reset form
     setFormData({
       title: "",
@@ -98,21 +98,20 @@ export default function AdminPostsPage() {
       status: "draft",
       content: "",
     });
-    
-    // Show success message (in real app, this would be a toast)
-    alert("Post updated successfully!");
+
+    // Show success message
+    showSuccess("Post updated successfully!");
   };
 
   const handleDeletePost = (postId: string) => {
     // In real app, this would call API
-    console.log("Deleting post:", postId);
-    
+
     // Show confirmation dialog
     if (confirm("Are you sure you want to delete this post?")) {
       setPosts(posts.filter(post => post.id !== postId));
-      
-      // Show success message (in real app, this would be a toast)
-      alert("Post deleted successfully!");
+
+      // Show success message
+      showSuccess("Post deleted successfully!");
     }
   };
 
@@ -146,7 +145,7 @@ export default function AdminPostsPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Posts Management</h1>
-      
+
       <div className="bg-white shadow rounded-lg">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -156,7 +155,7 @@ export default function AdminPostsPage() {
             </Button>
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -201,13 +200,12 @@ export default function AdminPostsPage() {
                   <td className="px-4 py-3">{post.title}</td>
                   <td className="px-4 py-3">{post.slug}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      post.status === "published"
-                        ? "bg-green-100 text-green-800"
-                        : post.status === "draft"
+                    <span className={`px-2 py-1 text-xs rounded-full ${post.status === "published"
+                      ? "bg-green-100 text-green-800"
+                      : post.status === "draft"
                         ? "bg-yellow-100 text-yellow-800"
                         : "bg-gray-100 text-gray-800"
-                    }`}>
+                      }`}>
                       {post.status}
                     </span>
                   </td>
@@ -255,7 +253,7 @@ export default function AdminPostsPage() {
             onChange={handleTitleChange}
             required
           />
-          
+
           <FormField
             id="slug"
             name="slug"
@@ -265,7 +263,7 @@ export default function AdminPostsPage() {
             onChange={(value) => setFormData({ ...formData, slug: value })}
             required
           />
-          
+
           <FormField
             id="status"
             name="status"
@@ -280,7 +278,7 @@ export default function AdminPostsPage() {
             ]}
             required
           />
-          
+
           <FormField
             id="content"
             name="content"
@@ -292,7 +290,7 @@ export default function AdminPostsPage() {
             required
           />
         </div>
-        
+
         <div className="flex justify-end space-x-2 pt-4">
           <Button
             variant="secondary"
@@ -323,7 +321,7 @@ export default function AdminPostsPage() {
             onChange={handleTitleChange}
             required
           />
-          
+
           <FormField
             id="slug"
             name="slug"
@@ -333,7 +331,7 @@ export default function AdminPostsPage() {
             onChange={(value) => setFormData({ ...formData, slug: value })}
             required
           />
-          
+
           <FormField
             id="status"
             name="status"
@@ -348,7 +346,7 @@ export default function AdminPostsPage() {
             ]}
             required
           />
-          
+
           <FormField
             id="content"
             name="content"
@@ -360,7 +358,7 @@ export default function AdminPostsPage() {
             required
           />
         </div>
-        
+
         <div className="flex justify-end space-x-2 pt-4">
           <Button
             variant="secondary"

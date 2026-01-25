@@ -102,7 +102,6 @@ export function PublicHeader({
       ],
     },
     { name: "Tin tức", path: "/home/posts", icon: "" },
-    { name: "Liên hệ", path: "/home/contact", icon: "" },
   ];
 
   const isActive = (path: string) => pathname === path || pathname?.startsWith(path + "/");
@@ -113,15 +112,8 @@ export function PublicHeader({
     );
   };
 
-  const isTransparentPage =
-    pathname?.startsWith("/home/services") ||
-    pathname?.startsWith("/home/projects") ||
-    pathname?.startsWith("/home/posts") ||
-    pathname?.startsWith("/home/contact");
-
-  const headerClass = isTransparentPage
-    ? (scrolled ? "bg-white/80 backdrop-blur-md shadow-sm" : "bg-transparent")
-    : "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100";
+  /* Always use white background */
+  const headerClass = "bg-white shadow-sm border-b border-gray-100";
 
   const handleToggle = () => {
     setInternalMobileMenuOpen(!internalMobileMenuOpen);
@@ -138,12 +130,12 @@ export function PublicHeader({
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${headerClass}`}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo area */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               <Link href="/" className="flex items-center gap-3 group">
-                <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 overflow-hidden`}>
+                <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 overflow-hidden shrink-0`}>
                   {systemConfig?.site_logo ? (
                     <Image
                       src={systemConfig.site_logo}
@@ -157,7 +149,7 @@ export function PublicHeader({
                     </svg>
                   )}
                 </div>
-                <span className={`text-xl font-bold tracking-tight ${(scrolled || !isTransparentPage) ? 'text-gray-900' : 'text-white'}`}>
+                <span className="text-xl font-bold tracking-tight text-gray-900 whitespace-nowrap">
                   {siteName}
                 </span>
               </Link>
@@ -168,11 +160,9 @@ export function PublicHeader({
               {navigationItems.map((item) => (
                 <div key={item.name} className="relative group px-1">
                   {item.children ? (
-                    <button className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive(item.path)
+                    <button className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${isActive(item.path)
                       ? "bg-primary/10 text-primary"
-                      : (scrolled || !isTransparentPage)
-                        ? "text-gray-700 hover:text-primary hover:bg-gray-50"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-primary hover:bg-gray-50"
                       }`}>
                       {item.name}
                       <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform duration-200" />
@@ -180,11 +170,9 @@ export function PublicHeader({
                   ) : (
                     <Link
                       href={item.path}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive(item.path)
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${isActive(item.path)
                         ? "bg-primary/10 text-primary"
-                        : (scrolled || !isTransparentPage)
-                          ? "text-gray-700 hover:text-primary hover:bg-gray-50"
-                          : "text-white/90 hover:text-white hover:bg-white/10"
+                        : "text-gray-700 hover:text-primary hover:bg-gray-50"
                         }`}
                     >
                       {item.name}
@@ -199,7 +187,7 @@ export function PublicHeader({
                           <Link
                             key={child.path}
                             href={child.path}
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-primary transition-colors whitespace-nowrap"
                           >
                             <span className="text-xl opacity-80">{child.icon}</span>
                             {child.name}
@@ -213,16 +201,16 @@ export function PublicHeader({
             </nav>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               <Link href="/home/contact" className="hidden lg:flex">
-                <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-full font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all">
+                <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-full font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all whitespace-nowrap">
                   <PhoneIcon className="w-4 h-4" />
                   <span>Tư vấn</span>
                 </button>
               </Link>
 
               <button
-                className={`lg:hidden p-3 rounded-xl transition-all active:scale-95 z-[70] ${(scrolled || !isTransparentPage) ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}
+                className="lg:hidden p-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-all active:scale-95 z-[70]"
                 onClick={handleToggle}
                 aria-label="Toggle menu"
               >

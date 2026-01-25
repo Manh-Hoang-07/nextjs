@@ -8,9 +8,9 @@ export const userEndpoints = {
         refresh: "/api/auth/refresh",
     },
     profile: {
-        me: "/api/users/me",
-        update: "/api/users/me",
-        changePassword: "/api/users/me/password",
+        me: "/api/user/profile",
+        update: "/api/user/profile",
+        changePassword: "/api/user/profile/change-password",
     },
     groups: {
         list: "/api/user/groups",

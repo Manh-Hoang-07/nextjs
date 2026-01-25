@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/navigation/Button";
 import FormField from "@/components/ui/forms/FormField";
 import { useAuthStore } from "@/lib/store/authStore";
 import ImageUploader from "@/components/ui/forms/ImageUploader";
+import { userService } from "@/services/user.service";
+import { useToastContext } from "@/contexts/ToastContext";
 
 // 1. Define Profile Schema
 const profileSchema = z.object({
@@ -26,6 +28,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 export default function UserProfileEditPage() {
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const { showSuccess, showError } = useToastContext();
   const [success, setSuccess] = useState<string | null>(null);
 
   const {
@@ -67,12 +70,39 @@ export default function UserProfileEditPage() {
     setSuccess(null);
 
     try {
-      // TODO: Implement API call to update profile
-      console.log("Updating profile with:", data);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setSuccess("Cập nhật thông tin thành công!");
+      // Clean data: convert null to undefined for API
+      const cleanData = {
+        name: data.name,
+        image: data.image || undefined,
+        birthday: data.birthday || undefined,
+        gender: data.gender || undefined,
+        address: data.address || undefined,
+        about: data.about || undefined,
+      };
+
+      const response = await userService.updateProfile(cleanData);
+
+      if (response.success) {
+        showSuccess(response.message || "Cập nhật thông tin thành công!");
+
+        // Update user in auth store
+        if (response.data) {
+          // Flatten profile data for authStore compatibility
+          const updatedUser = {
+            ...response.data,
+            name: response.data.profile?.name || response.data.name,
+            image: response.data.profile?.image || response.data.image,
+            birthday: response.data.profile?.birthday || response.data.birthday,
+            gender: response.data.profile?.gender || response.data.gender,
+            address: response.data.profile?.address || response.data.address,
+            about: response.data.profile?.about || response.data.about,
+          };
+          useAuthStore.getState().setUser(updatedUser);
+        }
+      }
     } catch (err: any) {
       console.error("Update profile error:", err);
+      showError(err.response?.data?.message || "Có lỗi xảy ra khi cập nhật thông tin");
     } finally {
       setIsLoading(false);
     }
