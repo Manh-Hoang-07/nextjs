@@ -22,9 +22,9 @@ interface Certificate {
 }
 
 interface PageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 // Helper to format date safely
@@ -55,7 +55,8 @@ async function getCertificate(id: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const cert = await getCertificate(params.id);
+    const { id } = await params;
+    const cert = await getCertificate(id);
     if (!cert) {
         return {
             title: "Chứng chỉ không tồn tại",
@@ -68,7 +69,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CertificateDetailPage({ params }: PageProps) {
-    const cert = await getCertificate(params.id);
+    const { id } = await params;
+    const cert = await getCertificate(id);
 
     if (!cert) {
         notFound();

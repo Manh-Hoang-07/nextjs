@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 import { Partner } from "@/types/api";
 
@@ -48,9 +49,11 @@ export function PartnerCarousel({ partners }: PartnerCarouselProps) {
                             {partners.slice(pageIdx * itemsPerViewPartner, (pageIdx + 1) * itemsPerViewPartner).map(partner => (
                                 <div key={partner.id} className="w-32 h-16 relative flex items-center justify-center transition-all duration-300 hover:scale-105" title={partner.name}>
                                     {partner.logo ? (
-                                        <img
+                                        <Image
                                             src={partner.logo}
                                             alt={partner.name}
+                                            width={128}
+                                            height={64}
                                             className="max-w-full max-h-full object-contain"
                                         />
                                     ) : (

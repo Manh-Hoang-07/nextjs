@@ -20,9 +20,9 @@ interface GalleryItem {
 }
 
 interface PageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 async function getGalleryItem(id: string) {
@@ -52,7 +52,8 @@ async function getGalleryItem(id: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const item = await getGalleryItem(params.id);
+    const { id } = await params;
+    const item = await getGalleryItem(id);
     if (!item) {
         return {
             title: "Dự án không tồn tại",
@@ -65,7 +66,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function GalleryDetailPage({ params }: PageProps) {
-    const item = await getGalleryItem(params.id);
+    const { id } = await params;
+    const item = await getGalleryItem(id);
 
     if (!item) {
         notFound();
