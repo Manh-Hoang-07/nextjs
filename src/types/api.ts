@@ -197,3 +197,18 @@ export interface ContactResponse {
   createdAt: string;
 }
 
+export interface ContentTemplate {
+  id: string;
+  code: string;
+  name: string;
+  category: 'render' | 'file';
+  type: 'email' | 'telegram' | 'zalo' | 'sms' | 'pdf_generated' | 'file_word' | 'file_excel' | 'file_pdf' | string;
+  content?: string;
+  file_path?: string;
+  metadata?: Record<string, any>;
+  variables?: string[] | Record<string, any>;
+  status: 'active' | 'inactive';
+  created_at: string;
+  updated_at?: string;
+}
+

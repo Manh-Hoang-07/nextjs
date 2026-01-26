@@ -45,6 +45,8 @@ export default function AdminRoles({
     hasData,
     refresh,
     showSuccess,
+    openModal,
+    closeModal,
   } = useAdminListPage({
     endpoints: {
       list: adminEndpoints.roles.list,
@@ -88,7 +90,7 @@ export default function AdminRoles({
   };
 
   const openAssignPermissionsModal = (item: any) => {
-    modals.openCustomModal("assignPermissions", item);
+    openModal("assignPermissions", item);
   };
 
   return (
@@ -206,13 +208,13 @@ export default function AdminRoles({
             onConfirm={() => handleDelete(selectedItem.id)}
           />
 
-          {modals.customModals.assignPermissions.show && (
+          {modals.assignPermissions && (
             <AssignPermissions
               show={true}
               role={selectedItem}
-              onClose={() => modals.closeCustomModal("assignPermissions")}
+              onClose={() => closeModal("assignPermissions")}
               onPermissionsAssigned={() => {
-                modals.closeCustomModal("assignPermissions");
+                closeModal("assignPermissions");
                 showSuccess("Quyền đã được gán thành công");
                 refresh();
               }}

@@ -167,6 +167,14 @@ export const adminEndpoints = {
         markAsRead: (id: Id) => `/api/admin/contacts/${id}/read`,
         close: (id: Id) => `/api/admin/contacts/${id}/close`,
     },
+    contentTemplates: {
+        list: "/api/admin/content-templates",
+        create: "/api/admin/content-templates",
+        show: (id: Id) => `/api/admin/content-templates/${id}`,
+        update: (id: Id) => `/api/admin/content-templates/${id}`,
+        delete: (id: Id) => `/api/admin/content-templates/${id}`,
+        test: (id: Id) => `/api/admin/content-templates/${id}/test`,
+    },
     menus: {
         list: "/api/admin/menus",
         create: "/api/admin/menus",

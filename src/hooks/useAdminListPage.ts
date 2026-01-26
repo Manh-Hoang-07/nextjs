@@ -103,6 +103,8 @@ export interface UseAdminListPageResult {
   handleCreate: (itemData: any) => Promise<void>;
   handleUpdate: (id: string | number, itemData: any) => Promise<void>;
   handleDelete: (id: string | number) => Promise<void>;
+  openModal: (modalName: string, item?: any) => void;
+  closeModal: (modalName: string) => void;
 
   // Utils
   getSerialNumber: (index: number) => number;
@@ -149,6 +151,8 @@ export function useAdminListPage(
     closeEditModal,
     openDeleteModal,
     closeDeleteModal,
+    openModal,
+    closeModal,
   } = useAdminModals({
     clearApiErrors: composable.clearApiErrors,
     customModals,
@@ -278,6 +282,8 @@ export function useAdminListPage(
     handleCreate,
     handleUpdate,
     handleDelete,
+    openModal,
+    closeModal,
 
     // Utils
     getSerialNumber,
@@ -286,5 +292,4 @@ export function useAdminListPage(
   };
 }
 
-export default useAdminListPage;
 
