@@ -1,14 +1,17 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useEffect, useMemo } from "react";
 import { ContentTemplate } from "@/types/api";
+import FormField from "@/components/ui/forms/FormField";
+import SingleSelectEnhanced from "@/components/ui/forms/SingleSelectEnhanced";
 
 interface FormProps {
     initialData?: Partial<ContentTemplate>;
     onSubmit: (data: any) => void;
     apiErrors?: any;
     loading?: boolean;
+    onCancel?: () => void;
 }
 
 export default function ContentTemplateForm({
@@ -16,13 +19,16 @@ export default function ContentTemplateForm({
     onSubmit,
     apiErrors,
     loading = false,
+    onCancel,
 }: FormProps) {
     const {
         register,
         handleSubmit,
         watch,
         setValue,
-        formState: { errors },
+        control,
+        setError,
+        formState: { errors, isSubmitting },
     } = useForm({
         defaultValues: initialData || {
             status: "active",
@@ -47,6 +53,18 @@ export default function ContentTemplateForm({
             });
         }
     }, [initialData, setValue]);
+
+    // Handle API errors
+    useEffect(() => {
+        if (apiErrors && typeof apiErrors === 'object') {
+            Object.keys(apiErrors).forEach((key) => {
+                const message = Array.isArray(apiErrors[key]) ? apiErrors[key][0] : String(apiErrors[key]);
+                if (key !== 'message' && key !== 'error' && key !== 'success') {
+                    setError(key as any, { message });
+                }
+            });
+        }
+    }, [apiErrors, setError]);
 
     const onFormSubmit = (data: any) => {
         const formattedData = { ...data };
@@ -75,145 +93,201 @@ export default function ContentTemplateForm({
         onSubmit(formattedData);
     };
 
+    const categoryOptions = [
+        { value: "render", label: "Render (HTML/Text)" },
+        { value: "file", label: "File (Word/Excel/PDF)" },
+    ];
+
+    const typeOptions = [
+        { value: "email", label: "Email" },
+        { value: "telegram", label: "Telegram" },
+        { value: "zalo", label: "Zalo" },
+        { value: "sms", label: "SMS" },
+        { value: "pdf_generated", label: "PDF Generated" },
+        { value: "file_word", label: "File Word" },
+        { value: "file_excel", label: "File Excel" },
+    ];
+
+    const statusOptions = [
+        { value: "active", label: "Hoạt động" },
+        { value: "inactive", label: "Tạm ngưng" },
+    ];
+
     return (
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8 max-h-[70vh] overflow-y-auto px-1 pr-3 scrollbar-thin">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
             {/* SECTION 1: THÔNG TIN CƠ BẢN */}
-            <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-                    <div className="w-1 h-5 bg-blue-600 rounded-full" />
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Thông tin cơ bản</h3>
-                </div>
+            <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+                <header className="flex items-center space-x-3 mb-2">
+                    <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Thông tin cơ bản</h3>
+                        <p className="text-xs text-gray-500">Mã định danh và phân loại mẫu</p>
+                    </div>
+                </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Mã (Code) *</label>
-                        <input
-                            {...register("code", { required: "Vui lòng nhập mã" })}
-                            className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                            placeholder="Ví dụ: registration_success"
-                        />
-                        {errors.code && <p className="text-[10px] text-red-500 font-medium">{errors.code.message as string}</p>}
-                    </div>
+                    <FormField
+                        label="Mã (Code)"
+                        {...register("code", { required: "Vui lòng nhập mã" })}
+                        error={errors.code?.message?.toString()}
+                        placeholder="Ví dụ: registration_success"
+                        required
+                    />
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Tên mẫu *</label>
-                        <input
-                            {...register("name", { required: "Vui lòng nhập tên" })}
-                            className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                            placeholder="Ví dụ: Xác nhận đăng ký"
-                        />
-                        {errors.name && <p className="text-[10px] text-red-500 font-medium">{errors.name.message as string}</p>}
-                    </div>
+                    <FormField
+                        label="Tên mẫu"
+                        {...register("name", { required: "Vui lòng nhập tên" })}
+                        error={errors.name?.message?.toString()}
+                        placeholder="Ví dụ: Xác nhận đăng ký"
+                        required
+                    />
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Phân loại *</label>
-                        <select
-                            {...register("category", { required: "Vui lòng chọn phân loại" })}
-                            className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white"
-                        >
-                            <option value="render">Render (HTML/Text Content)</option>
-                            <option value="file">File (Word/Excel/PDF Path)</option>
-                        </select>
-                    </div>
+                    <Controller
+                        name="category"
+                        control={control}
+                        rules={{ required: "Vui lòng chọn phân loại" }}
+                        render={({ field }) => (
+                            <SingleSelectEnhanced
+                                {...field}
+                                label="Phân loại"
+                                options={categoryOptions}
+                                placeholder="-- Chọn phân loại --"
+                                error={errors.category?.message?.toString()}
+                                required
+                            />
+                        )}
+                    />
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Kênh/Loại *</label>
-                        <select
-                            {...register("type", { required: "Vui lòng chọn loại" })}
-                            className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white"
-                        >
-                            <option value="email">Email</option>
-                            <option value="telegram">Telegram</option>
-                            <option value="zalo">Zalo</option>
-                            <option value="sms">SMS</option>
-                            <option value="pdf_generated">PDF Generated</option>
-                            <option value="file_word">File Word</option>
-                            <option value="file_excel">File Excel</option>
-                        </select>
-                    </div>
+                    <Controller
+                        name="type"
+                        control={control}
+                        rules={{ required: "Vui lòng chọn loại" }}
+                        render={({ field }) => (
+                            <SingleSelectEnhanced
+                                {...field}
+                                label="Kênh/Loại"
+                                options={typeOptions}
+                                placeholder="-- Chọn loại --"
+                                error={errors.type?.message?.toString()}
+                                required
+                            />
+                        )}
+                    />
 
                     <div className="md:col-span-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Trạng thái</label>
-                        <div className="flex items-center gap-6">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" {...register("status")} value="active" className="w-4 h-4 text-blue-600 focus:ring-0 border-gray-300" />
-                                <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">Hoạt động</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" {...register("status")} value="inactive" className="w-4 h-4 text-blue-600 focus:ring-0 border-gray-300" />
-                                <span className="text-sm font-medium text-gray-700 group-hover:text-red-500 transition-colors">Tạm ngưng</span>
-                            </label>
-                        </div>
+                        <Controller
+                            name="status"
+                            control={control}
+                            render={({ field }) => (
+                                <SingleSelectEnhanced
+                                    {...field}
+                                    label="Trạng thái"
+                                    options={statusOptions}
+                                    placeholder="-- Chọn trạng thái --"
+                                    error={errors.status?.message?.toString()}
+                                />
+                            )}
+                        />
                     </div>
                 </div>
             </section>
 
             {/* SECTION 2: NỘI DUNG */}
-            <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-                    <div className="w-1 h-5 bg-blue-600 rounded-full" />
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Nội dung Template</h3>
-                </div>
+            <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+                <header className="flex items-center space-x-3 mb-2">
+                    <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Nội dung Template</h3>
+                        <p className="text-xs text-gray-500">Nội dung chi tiết của mẫu {category === 'render' ? 'nội dung' : 'đường dẫn file'}</p>
+                    </div>
+                </header>
 
                 {category === 'render' ? (
-                    <div className="space-y-1">
-                        <textarea
-                            {...register("content")}
-                            rows={8}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-mono text-sm bg-gray-50/50"
-                            placeholder="Nhập nội dung template, hỗ trợ biến dạng {{variable_name}}"
-                        />
-                        <p className="text-[10px] text-gray-400 italic">Mẹo: Sử dụng cú pháp <code className="text-blue-600 bg-blue-50 px-1 rounded">{"{{variable}}"}</code> để chèn biến động.</p>
-                    </div>
+                    <FormField
+                        label="Nội dung"
+                        type="textarea"
+                        rows={8}
+                        {...register("content")}
+                        error={errors.content?.message?.toString()}
+                        placeholder="Nhập nội dung template, hỗ trợ biến dạng {{variable_name}}"
+                        helpText="Sử dụng cú pháp {{variable}} để chèn biến động."
+                    />
                 ) : (
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Đường dẫn File (Path)</label>
-                        <input
-                            {...register("file_path")}
-                            className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                            placeholder="Ví dụ: templates/contract_v1.docx"
-                        />
-                    </div>
+                    <FormField
+                        label="Đường dẫn File (Path)"
+                        {...register("file_path")}
+                        error={errors.file_path?.message?.toString()}
+                        placeholder="Ví dụ: templates/contract_v1.docx"
+                    />
                 )}
             </section>
 
             {/* SECTION 3: METADATA & BIẾN */}
-            <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-                    <div className="w-1 h-5 bg-blue-600 rounded-full" />
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Metadata & Biến</h3>
-                </div>
+            <section className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+                <header className="flex items-center space-x-3 mb-2">
+                    <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Metadata & Biến</h3>
+                        <p className="text-xs text-gray-500">Cấu hình nâng cao và khai báo tham số</p>
+                    </div>
+                </header>
 
                 <div className="space-y-4">
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Biến khả dụng (Variables)</label>
-                        <input
-                            {...register("variables")}
-                            className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                            placeholder="Ví dụ: name, email, otp (cách nhau bởi dấu phẩy)"
-                        />
-                    </div>
+                    <FormField
+                        label="Biến khả dụng (Variables)"
+                        {...register("variables")}
+                        error={errors.variables?.message?.toString()}
+                        placeholder="Ví dụ: name, email, otp (cách nhau bởi dấu phẩy)"
+                    />
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Metadata (JSON format)</label>
-                        <textarea
-                            {...register("metadata")}
-                            rows={4}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-mono text-sm bg-gray-50/50"
-                            placeholder='{"subject": "Chào mừng thành viên mới"}'
-                        />
-                        <p className="text-[10px] text-gray-400 italic">Cấu hình JSON bổ sung (Ví dụ Email cần subject, Telegram cần chatId,...)</p>
-                    </div>
+                    <FormField
+                        label="Metadata (JSON format)"
+                        type="textarea"
+                        rows={4}
+                        {...register("metadata")}
+                        error={errors.metadata?.message?.toString()}
+                        placeholder='{"subject": "Chào mừng thành viên mới"}'
+                        helpText="Cấu hình JSON bổ sung (Ví dụ Email cần subject, Telegram cần chatId,...)"
+                    />
                 </div>
             </section>
 
-            <div className="flex justify-end gap-3 pt-6 sticky bottom-0 bg-white border-t border-gray-50 py-4 -mx-1">
+            {/* ERROR DISPLAY */}
+            {apiErrors && (typeof apiErrors === 'string' || apiErrors.message || apiErrors.error) && (
+                <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 font-medium animate-in fade-in slide-in-from-top-1">
+                    {typeof apiErrors === 'string'
+                        ? apiErrors
+                        : (apiErrors.message || apiErrors.error || 'Đã xảy ra lỗi, vui lòng kiểm tra lại.')}
+                </div>
+            )}
+
+            {/* FOOTER ACTIONS */}
+            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-8 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95"
+                >
+                    Hủy bỏ
+                </button>
                 <button
                     type="submit"
-                    disabled={loading}
-                    className="px-10 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm"
+                    disabled={isSubmitting || loading}
+                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                 >
-                    {loading ? (
+                    {isSubmitting || loading ? (
                         <div className="flex items-center gap-2">
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             Đang xử lý...
@@ -223,14 +297,6 @@ export default function ContentTemplateForm({
                     )}
                 </button>
             </div>
-
-            {apiErrors && Object.keys(apiErrors).length > 0 && (
-                <div className="p-4 bg-red-50 text-red-600 rounded-xl text-xs border border-red-100 font-medium animate-in fade-in slide-in-from-top-1">
-                    {typeof apiErrors === 'string'
-                        ? apiErrors
-                        : (apiErrors.message || apiErrors.error || 'Đã xảy ra lỗi, vui lòng kiểm tra lại.')}
-                </div>
-            )}
         </form>
     );
 }
